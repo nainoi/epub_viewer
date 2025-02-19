@@ -22,6 +22,7 @@ class EpubViewer extends StatefulWidget {
     this.selectionContextMenu,
     this.onAnnotationClicked,
     this.onTapView,
+    this.currentChapter,
   });
 
   ///Epub controller to manage epub
@@ -57,6 +58,9 @@ class EpubViewer extends StatefulWidget {
   ///if null, the default context menu will be used
   final ContextMenu? selectionContextMenu;
 
+  ///Call back when epub page changes
+  final ValueChanged<EpubChapter>? currentChapter;
+
   final Function()? onTapView;
 
   @override
@@ -69,6 +73,7 @@ class _EpubViewerState extends State<EpubViewer> {
   // late PullToRefreshController pullToRefreshController;
   // late ContextMenu contextMenu;
   var selectedText = '';
+  List<EpubChapter> chapters = [];
 
   InAppWebViewController? webViewController;
 
@@ -110,6 +115,7 @@ class _EpubViewerState extends State<EpubViewer> {
         handlerName: "chapters",
         callback: (data) async {
           final chapters = await widget.epubController.parseChapters();
+          this.chapters = chapters;
           widget.onChaptersLoaded?.call(chapters);
         });
 
@@ -138,7 +144,14 @@ class _EpubViewerState extends State<EpubViewer> {
         handlerName: "relocated",
         callback: (data) {
           var location = data[0];
-          widget.onRelocated?.call(EpubLocation.fromJson(location));
+          var loc = EpubLocation.fromJson(location);
+          widget.onRelocated?.call(loc);
+          if (chapters.isEmpty) {
+            chapters = widget.epubController.getChapters();
+          }
+          EpubChapter? ch = chapters
+              .firstWhere((e) => e.href == (loc.location?.start?.href ?? ''));
+          widget.currentChapter?.call(ch);
         });
 
     webViewController?.addJavaScriptHandler(
@@ -200,84 +213,85 @@ class _EpubViewerState extends State<EpubViewer> {
     return GestureDetector(
         onTap: () {
           print('object');
-          if(widget.onTapView != null){
+          if (widget.onTapView != null) {
             widget.onTapView!();
           }
         },
         child: AbsorbPointer(
+            absorbing: false,
             child: InAppWebView(
-          contextMenu: widget.selectionContextMenu,
-          key: webViewKey,
-          initialFile:
-              'packages/flutter_epub_viewer/lib/assets/webpage/html/swipe.html',
-          // initialUrlRequest: URLRequest(
-          //     url: WebUri(
-          //         'http://localhost:8080/html/swipe.html?cfi=${widget.initialCfi ?? ''}&displaySettings=$displaySettings')),
-          initialSettings: settings
-            ..disableVerticalScroll = widget.displaySettings?.snap ?? false,
-          // pullToRefreshController: pullToRefreshController,
-          onWebViewCreated: (controller) async {
-            webViewController = controller;
-            widget.epubController.setWebViewController(controller);
-            // await loadBook();
-            addJavaScriptHandlers();
-          },
-          onLoadStart: (controller, url) {},
-          onPermissionRequest: (controller, request) async {
-            return PermissionResponse(
-                resources: request.resources,
-                action: PermissionResponseAction.GRANT);
-          },
-          shouldOverrideUrlLoading: (controller, navigationAction) async {
-            var uri = navigationAction.request.url!;
+              contextMenu: widget.selectionContextMenu,
+              key: webViewKey,
+              initialFile:
+                  'packages/flutter_epub_viewer/lib/assets/webpage/html/swipe.html',
+              // initialUrlRequest: URLRequest(
+              //     url: WebUri(
+              //         'http://localhost:8080/html/swipe.html?cfi=${widget.initialCfi ?? ''}&displaySettings=$displaySettings')),
+              initialSettings: settings
+                ..disableVerticalScroll = widget.displaySettings?.snap ?? false,
+              // pullToRefreshController: pullToRefreshController,
+              onWebViewCreated: (controller) async {
+                webViewController = controller;
+                widget.epubController.setWebViewController(controller);
+                // await loadBook();
+                addJavaScriptHandlers();
+              },
+              onLoadStart: (controller, url) {},
+              onPermissionRequest: (controller, request) async {
+                return PermissionResponse(
+                    resources: request.resources,
+                    action: PermissionResponseAction.GRANT);
+              },
+              shouldOverrideUrlLoading: (controller, navigationAction) async {
+                var uri = navigationAction.request.url!;
 
-            if (![
-              "http",
-              "https",
-              "file",
-              "chrome",
-              "data",
-              "javascript",
-              "about"
-            ].contains(uri.scheme)) {
-              // if (await canLaunchUrl(uri)) {
-              //   // Launch the App
-              //   await launchUrl(
-              //     uri,
-              //   );
-              //   // and cancel the request
-              //   return NavigationActionPolicy.CANCEL;
-              // }
-            }
+                if (![
+                  "http",
+                  "https",
+                  "file",
+                  "chrome",
+                  "data",
+                  "javascript",
+                  "about"
+                ].contains(uri.scheme)) {
+                  // if (await canLaunchUrl(uri)) {
+                  //   // Launch the App
+                  //   await launchUrl(
+                  //     uri,
+                  //   );
+                  //   // and cancel the request
+                  //   return NavigationActionPolicy.CANCEL;
+                  // }
+                }
 
-            return NavigationActionPolicy.ALLOW;
-          },
-          onLoadStop: (controller, url) async {},
-          onReceivedError: (controller, request, error) {},
+                return NavigationActionPolicy.ALLOW;
+              },
+              onLoadStop: (controller, url) async {},
+              onReceivedError: (controller, request, error) {},
 
-          onProgressChanged: (controller, progress) {},
-          onUpdateVisitedHistory: (controller, url, androidIsReload) {},
-          onConsoleMessage: (controller, consoleMessage) {
-            if (kDebugMode) {
-              debugPrint("JS_LOG: ${consoleMessage.message}");
-              // debugPrint(consoleMessage.message);
-            }
-          },
-          gestureRecognizers: {
-            Factory<VerticalDragGestureRecognizer>(
-                () => VerticalDragGestureRecognizer()),
-            Factory<LongPressGestureRecognizer>(() =>
-                LongPressGestureRecognizer(
-                    duration: const Duration(milliseconds: 30))),
-            Factory<TapGestureRecognizer>(() => TapGestureRecognizer()
-              ..onTap = () {
-                print('ssss');
-              }
-              ..onTapDown = (TapDownDetails details) {
-                print(details.globalPosition.dx);
-              }),
-          },
-        )));
+              onProgressChanged: (controller, progress) {},
+              onUpdateVisitedHistory: (controller, url, androidIsReload) {},
+              onConsoleMessage: (controller, consoleMessage) {
+                if (kDebugMode) {
+                  debugPrint("JS_LOG: ${consoleMessage.message}");
+                  // debugPrint(consoleMessage.message);
+                }
+              },
+              gestureRecognizers: {
+                Factory<VerticalDragGestureRecognizer>(
+                    () => VerticalDragGestureRecognizer()),
+                Factory<LongPressGestureRecognizer>(() =>
+                    LongPressGestureRecognizer(
+                        duration: const Duration(milliseconds: 30))),
+                Factory<TapGestureRecognizer>(() => TapGestureRecognizer()
+                  ..onTap = () {
+                    print('ssss');
+                  }
+                  ..onTapDown = (TapDownDetails details) {
+                    print(details.globalPosition.dx);
+                  }),
+              },
+            )));
   }
 
   @override

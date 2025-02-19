@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -58,10 +59,13 @@ class EpubLocation {
   /// Progress percentage of location, value between 0.0 and 1.0
   double progress;
 
+  Locations? location;
+
   EpubLocation({
     required this.startCfi,
     required this.endCfi,
     required this.progress,
+    this.location,
   });
   factory EpubLocation.fromJson(Map<String, dynamic> json) =>
       _$EpubLocationFromJson(json);
@@ -257,4 +261,115 @@ class EpubTextExtractRes {
   factory EpubTextExtractRes.fromJson(Map<String, dynamic> json) =>
       _$EpubTextExtractResFromJson(json);
   Map<String, dynamic> toJson() => _$EpubTextExtractResToJson(this);
+}
+
+class Locations{
+  Location? start;
+  Location? end;
+
+  Locations({this.start, this.end});
+
+  Locations copyWith({
+    Location? start,
+    Location? end,
+  }) =>
+      Locations(
+        start: start ?? this.start,
+        end: end ?? this.end,
+      );
+
+  factory Locations.fromJson(Map<String, dynamic> json) => Locations(
+    start: json["start"] == null ? null : Location.fromJson(json["start"]),
+    end: json["end"] == null ? null : Location.fromJson(json["end"]),
+  );
+}
+
+class Location {
+  int? index;
+  String? href;
+  String? cfi;
+  Displayed? displayed;
+  int? location;
+  double? percentage;
+
+  Location({
+    this.index,
+    this.href,
+    this.cfi,
+    this.displayed,
+    this.location,
+    this.percentage,
+  });
+
+  Location copyWith({
+    int? index,
+    String? href,
+    String? cfi,
+    Displayed? displayed,
+    int? location,
+    double? percentage,
+  }) =>
+      Location(
+        index: index ?? this.index,
+        href: href ?? this.href,
+        cfi: cfi ?? this.cfi,
+        displayed: displayed ?? this.displayed,
+        location: location ?? this.location,
+        percentage: percentage ?? this.percentage,
+      );
+
+  factory Location.fromRawJson(String str) => Location.fromJson(json.decode(str));
+
+  String toRawJson() => json.encode(toJson());
+
+  factory Location.fromJson(Map<String, dynamic> json) => Location(
+    index: json["index"],
+    href: json["href"],
+    cfi: json["cfi"],
+    displayed: json["displayed"] == null ? null : Displayed.fromJson(json["displayed"]),
+    location: json["location"],
+    percentage: json["percentage"]?.toDouble(),
+  );
+
+  Map<String, dynamic> toJson() => {
+    "index": index,
+    "href": href,
+    "cfi": cfi,
+    "displayed": displayed?.toJson(),
+    "location": location,
+    "percentage": percentage,
+  };
+}
+
+class Displayed {
+  int? page;
+  int? total;
+
+  Displayed({
+    this.page,
+    this.total,
+  });
+
+  Displayed copyWith({
+    int? page,
+    int? total,
+  }) =>
+      Displayed(
+        page: page ?? this.page,
+        total: total ?? this.total,
+      );
+
+  factory Displayed.fromRawJson(String str) => Displayed.fromJson(json.decode(str));
+
+  String toRawJson() => json.encode(toJson());
+
+  factory Displayed.fromJson(Map<String, dynamic> json) => Displayed(
+    page: json["page"],
+    total: json["total"],
+  );
+
+  Map<String, dynamic> toJson() => {
+    "page": page,
+    "total": total,
+  };
 }

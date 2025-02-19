@@ -119,10 +119,12 @@
       rendition.on("relocated", function(location) {
         var percent = location.start.percentage;
         // var percentage = Math.floor(percent * 100);
+        console.log(location);
         var location  = {
           startCfi: location.start.cfi,
           endCfi:location.end.cfi,
-          progress: percent
+          progress: percent,
+          location: location
         }
         var args = [location]
         window.flutter_inappwebview.callHandler('relocated', ...args);
@@ -149,9 +151,9 @@
           const el = contents.document.documentElement;
 
           if (el) {
-            // console.log('EPUB_TEST_HOOK_IF')
+             console.log('EPUB_TEST_HOOK_IF')
             detectSwipe(el, function(el,direction){
-              // console.log("EPUB_TEST_DIR"+direction.toString())
+              console.log("EPUB_TEST_DIR"+direction.toString())
 
                 if(direction == 'l'){
                   rendition.next()

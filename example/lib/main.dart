@@ -92,7 +92,8 @@ class _MyHomePageState extends State<MyHomePage> {
               children: [
                 EpubViewer(
                   epubSource: EpubSource.fromUrl(
-                      'https://github.com/IDPF/epub3-samples/releases/download/20230704/accessible_epub_3.epub'),
+                      // 'https://vocsyinfotech.in/envato/cc/flutter_ebook/uploads/22566_The-Racketeer---John-Grisham.epub'),
+                  'https://github.com/IDPF/epub3-samples/releases/download/20230704/accessible_epub_3.epub'),
                   epubController: epubController,
                   displaySettings: EpubDisplaySettings(
                       flow: EpubFlow.paginated,
@@ -114,6 +115,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         hideDefaultSystemContextMenuItems: true),
                   ),
                   onChaptersLoaded: (chapters) {
+                    print(chapters);
                     setState(() {
                       isLoading = false;
                     });
@@ -129,6 +131,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     setState(() {
                       progress = value.progress;
                     });
+                    // epubController.getCurrentLocation();
                   },
                   onAnnotationClicked: (cfi) {
                     print("Annotation clicked $cfi");
@@ -136,6 +139,9 @@ class _MyHomePageState extends State<MyHomePage> {
                   onTextSelected: (epubTextSelection) {
                     textSelectionCfi = epubTextSelection.selectionCfi;
                     print(textSelectionCfi);
+                  },
+                  currentChapter: (ch){
+                    print('Chapter title : ${ch.title}');
                   },
                 ),
                 Visibility(

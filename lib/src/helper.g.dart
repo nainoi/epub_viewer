@@ -11,7 +11,7 @@ EpubChapter _$EpubChapterFromJson(Map<String, dynamic> json) => EpubChapter(
       href: json['href'] as String,
       id: json['id'] as String,
       subitems: (json['subitems'] as List<dynamic>)
-          .map((e) => EpubChapter.fromJson(e as Map<String, dynamic>))
+          .map((e) => EpubChapter.fromJson(Map<String, dynamic>.from(e as Map)))
           .toList(),
     );
 
@@ -39,6 +39,7 @@ EpubLocation _$EpubLocationFromJson(Map<String, dynamic> json) => EpubLocation(
       startCfi: json['startCfi'] as String,
       endCfi: json['endCfi'] as String,
       progress: (json['progress'] as num).toDouble(),
+      location: Locations.fromJson(json['location'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$EpubLocationToJson(EpubLocation instance) =>

@@ -42,6 +42,8 @@ class EpubController {
     final result = await webViewController?.evaluateJavascript(
         source: 'getCurrentLocation()');
 
+    print(result.toString());
+
     if (result == null) {
       throw Exception("Epub locations not loaded");
     }
@@ -60,10 +62,14 @@ class EpubController {
   Future<List<EpubChapter>> parseChapters() async {
     if (_chapters.isNotEmpty) return _chapters;
     checkEpubLoaded();
-    final result =
+    List result =
         await webViewController!.evaluateJavascript(source: 'getChapters()');
-    _chapters =
-        List<EpubChapter>.from(result.map((e) => EpubChapter.fromJson(e)));
+
+    var s = result.map((e)=>EpubChapter.fromJson(Map<String, dynamic>.from (e as Map)));
+    for(var i in s){
+      _chapters.add(i);
+    }
+    // _chapters = List<EpubChapter>.from(result.map((e) => EpubChapter.fromJson(e)));
     return _chapters;
   }
 
