@@ -21,6 +21,7 @@ class EpubViewer extends StatefulWidget {
     this.displaySettings,
     this.selectionContextMenu,
     this.onAnnotationClicked,
+    this.onTapView,
   });
 
   ///Epub controller to manage epub
@@ -56,6 +57,8 @@ class EpubViewer extends StatefulWidget {
   ///if null, the default context menu will be used
   final ContextMenu? selectionContextMenu;
 
+  final Function()? onTapView;
+
   @override
   State<EpubViewer> createState() => _EpubViewerState();
 }
@@ -76,7 +79,8 @@ class _EpubViewerState extends State<EpubViewer> {
       transparentBackground: true,
       supportZoom: false,
       allowsInlineMediaPlayback: true,
-      disableLongPressContextMenuOnLinks: false,
+      disableLongPressContextMenuOnLinks: true,
+      disableContextMenu: true,
       iframeAllowFullscreen: true,
       allowsLinkPreview: false,
       verticalScrollBarEnabled: false,
@@ -193,64 +197,87 @@ class _EpubViewerState extends State<EpubViewer> {
 
   @override
   Widget build(BuildContext context) {
-    return InAppWebView(
-      contextMenu: widget.selectionContextMenu,
-      key: webViewKey,
-      initialFile:
-          'packages/flutter_epub_viewer/lib/assets/webpage/html/swipe.html',
-      // initialUrlRequest: URLRequest(
-      //     url: WebUri(
-      //         'http://localhost:8080/html/swipe.html?cfi=${widget.initialCfi ?? ''}&displaySettings=$displaySettings')),
-      initialSettings: settings
-        ..disableVerticalScroll = widget.displaySettings?.snap ?? false,
-      // pullToRefreshController: pullToRefreshController,
-      onWebViewCreated: (controller) async {
-        webViewController = controller;
-        widget.epubController.setWebViewController(controller);
-        // await loadBook();
-        addJavaScriptHandlers();
-      },
-      onLoadStart: (controller, url) {},
-      onPermissionRequest: (controller, request) async {
-        return PermissionResponse(
-            resources: request.resources,
-            action: PermissionResponseAction.GRANT);
-      },
-      shouldOverrideUrlLoading: (controller, navigationAction) async {
-        var uri = navigationAction.request.url!;
+    return GestureDetector(
+        onTap: () {
+          print('object');
+          if(widget.onTapView != null){
+            widget.onTapView!();
+          }
+        },
+        child: AbsorbPointer(
+            child: InAppWebView(
+          contextMenu: widget.selectionContextMenu,
+          key: webViewKey,
+          initialFile:
+              'packages/flutter_epub_viewer/lib/assets/webpage/html/swipe.html',
+          // initialUrlRequest: URLRequest(
+          //     url: WebUri(
+          //         'http://localhost:8080/html/swipe.html?cfi=${widget.initialCfi ?? ''}&displaySettings=$displaySettings')),
+          initialSettings: settings
+            ..disableVerticalScroll = widget.displaySettings?.snap ?? false,
+          // pullToRefreshController: pullToRefreshController,
+          onWebViewCreated: (controller) async {
+            webViewController = controller;
+            widget.epubController.setWebViewController(controller);
+            // await loadBook();
+            addJavaScriptHandlers();
+          },
+          onLoadStart: (controller, url) {},
+          onPermissionRequest: (controller, request) async {
+            return PermissionResponse(
+                resources: request.resources,
+                action: PermissionResponseAction.GRANT);
+          },
+          shouldOverrideUrlLoading: (controller, navigationAction) async {
+            var uri = navigationAction.request.url!;
 
-        if (!["http", "https", "file", "chrome", "data", "javascript", "about"]
-            .contains(uri.scheme)) {
-          // if (await canLaunchUrl(uri)) {
-          //   // Launch the App
-          //   await launchUrl(
-          //     uri,
-          //   );
-          //   // and cancel the request
-          //   return NavigationActionPolicy.CANCEL;
-          // }
-        }
+            if (![
+              "http",
+              "https",
+              "file",
+              "chrome",
+              "data",
+              "javascript",
+              "about"
+            ].contains(uri.scheme)) {
+              // if (await canLaunchUrl(uri)) {
+              //   // Launch the App
+              //   await launchUrl(
+              //     uri,
+              //   );
+              //   // and cancel the request
+              //   return NavigationActionPolicy.CANCEL;
+              // }
+            }
 
-        return NavigationActionPolicy.ALLOW;
-      },
-      onLoadStop: (controller, url) async {},
-      onReceivedError: (controller, request, error) {},
+            return NavigationActionPolicy.ALLOW;
+          },
+          onLoadStop: (controller, url) async {},
+          onReceivedError: (controller, request, error) {},
 
-      onProgressChanged: (controller, progress) {},
-      onUpdateVisitedHistory: (controller, url, androidIsReload) {},
-      onConsoleMessage: (controller, consoleMessage) {
-        if (kDebugMode) {
-          debugPrint("JS_LOG: ${consoleMessage.message}");
-          // debugPrint(consoleMessage.message);
-        }
-      },
-      gestureRecognizers: {
-        Factory<VerticalDragGestureRecognizer>(
-            () => VerticalDragGestureRecognizer()),
-        Factory<LongPressGestureRecognizer>(() => LongPressGestureRecognizer(
-            duration: const Duration(milliseconds: 30))),
-      },
-    );
+          onProgressChanged: (controller, progress) {},
+          onUpdateVisitedHistory: (controller, url, androidIsReload) {},
+          onConsoleMessage: (controller, consoleMessage) {
+            if (kDebugMode) {
+              debugPrint("JS_LOG: ${consoleMessage.message}");
+              // debugPrint(consoleMessage.message);
+            }
+          },
+          gestureRecognizers: {
+            Factory<VerticalDragGestureRecognizer>(
+                () => VerticalDragGestureRecognizer()),
+            Factory<LongPressGestureRecognizer>(() =>
+                LongPressGestureRecognizer(
+                    duration: const Duration(milliseconds: 30))),
+            Factory<TapGestureRecognizer>(() => TapGestureRecognizer()
+              ..onTap = () {
+                print('ssss');
+              }
+              ..onTapDown = (TapDownDetails details) {
+                print(details.globalPosition.dx);
+              }),
+          },
+        )));
   }
 
   @override

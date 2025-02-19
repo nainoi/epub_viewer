@@ -120,6 +120,9 @@ class _MyHomePageState extends State<MyHomePage> {
                   },
                   onEpubLoaded: () async {
                     print('Epub loaded');
+                    setState(() {
+                      isLoading = false;
+                    });
                   },
                   onRelocated: (value) {
                     print("Reloacted to $value");
