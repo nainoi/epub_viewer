@@ -56,6 +56,8 @@ class _MyHomePageState extends State<MyHomePage> {
   bool isLoading = true;
 
   double progress = 0.0;
+  
+  EpubFlow _epubFlow = EpubFlow.scrolled;
 
   @override
   Widget build(BuildContext context) {
@@ -78,6 +80,23 @@ class _MyHomePageState extends State<MyHomePage> {
                           )));
             },
           ),
+          IconButton(
+            icon: Text(_epubFlow == EpubFlow.paginated ? 'h' : 'v'),
+            onPressed: () {
+              if(_epubFlow == EpubFlow.paginated){
+                setState(() {
+                  _epubFlow = EpubFlow.scrolled;
+                  epubController.setFlow(flow: EpubFlow.scrolled);
+                  epubController.webViewController?.reload();
+                });
+              }else{
+                setState(() {
+                  _epubFlow = EpubFlow.paginated;
+                  epubController.setFlow(flow: EpubFlow.paginated);
+                });
+              }
+            },
+          ),
         ],
       ),
       body: SafeArea(
@@ -96,7 +115,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   'https://github.com/IDPF/epub3-samples/releases/download/20230704/accessible_epub_3.epub'),
                   epubController: epubController,
                   displaySettings: EpubDisplaySettings(
-                      flow: EpubFlow.paginated,
+                      flow: _epubFlow,
                       useSnapAnimationAndroid: false,
                       snap: true,
                       theme: EpubTheme.light(),

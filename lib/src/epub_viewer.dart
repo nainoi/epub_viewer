@@ -149,9 +149,10 @@ class _EpubViewerState extends State<EpubViewer> {
           if (chapters.isEmpty) {
             chapters = widget.epubController.getChapters();
           }
-          EpubChapter? ch = chapters
-              .firstWhere((e) => e.href == (loc.location?.start?.href ?? ''));
-          widget.currentChapter?.call(ch);
+          EpubChapter? ch = chapters.where((e) => e.href == (loc.location?.start?.href ?? '')).firstOrNull;
+          if (ch != null) {
+            widget.currentChapter?.call(ch);
+          }
         });
 
     webViewController?.addJavaScriptHandler(
