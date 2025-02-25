@@ -193,6 +193,11 @@
     function toCfi(cfi){
       rendition.display(cfi)
     }
+
+    //move to given cfi location
+    function goto(page){
+      rendition.display(page)
+    }
     
     //get all chapters
     function getChapters(){
@@ -307,6 +312,15 @@
       rendition.themes.registerUrl(name, style);
       rendition.themes.select(name);
       rendition.themes.override("font-family", `"'${name}', sans-serif"`);
+    }
+
+    function setLineHeight(line){
+      rendition.themes.override("line-height", line);
+    }
+
+    function setAlignment(alignment){
+      //rendition.themes.override("text-align", alignment);
+      rendition.themes.override("p", { "text-align": alignment });
     }
 
     //get current page text

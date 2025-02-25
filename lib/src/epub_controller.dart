@@ -24,6 +24,14 @@ class EpubController {
     webViewController?.evaluateJavascript(source: 'toCfi("$cfi")');
   }
 
+  displayPage({
+    ///Cfi String of the desired location, also accepts chapter href
+    required int page,
+  }) {
+    checkEpubLoaded();
+    webViewController?.evaluateJavascript(source: 'goto($page)');
+  }
+
   ///Moves to next page in epub view
   next() {
     checkEpubLoaded();
@@ -168,6 +176,16 @@ class EpubController {
   setFontStyle({required String font, required String styles}) async {
     await webViewController?.evaluateJavascript(
         source: 'setFontStyle("$font", "$styles")');
+  }
+
+  setLineHeight({required double lineHeight}) async {
+    await webViewController?.evaluateJavascript(
+        source: 'setLineHeight("$lineHeight")');
+  }
+
+  setAlignment({required String alignment}) async {
+    await webViewController?.evaluateJavascript(
+        source: 'setAlignment("$alignment")');
   }
 
   updateTheme({required EpubTheme theme}) async {

@@ -159,7 +159,6 @@ class _MyHomePageState extends State<MyHomePage> {
                         hideDefaultSystemContextMenuItems: true),
                   ),
                   onChaptersLoaded: (chapters) {
-                    print(chapters);
                     setState(() {
                       isLoading = false;
                     });
@@ -169,30 +168,20 @@ class _MyHomePageState extends State<MyHomePage> {
                     setState(() {
                       isLoading = false;
                     });
-                    final fontData = await rootBundle.load('assets/fonts/CordiaUPC_M.ttf');
-                    final fontUri = getFontUri(fontData, "font/opentype").toString();
-                    // epubController.injectFontIntoWebView(base64Font, "CordiaUPC");
-                    // epubController.setFont(font: 'Garuda');
+                    // epubController.setFont(font: 'BrowalliaUPC');
+                    // epubController.setFont(font: 'FreesiaUPC');
                     // epubController.setFont(font: 'BrowalliaNew');
                     // epubController.setFont(font: 'CordiaUPC');
                     // epubController.setFont(font: 'khand');
-                    // epubController.setFontStyle(font: "Khand", styles: "/dist/khand.css");
-                    // String base64Font = await fontToBase64("assets/fonts/CordiaUPC_M.ttf");
-                    // epubController.injectFontIntoWebView(base64Font, "CordiaUPC");
-                    // epubController.webViewController?.reload();
+                    // epubController.setLineHeight(lineHeight: 1);
+                    // epubController.setAlignment(alignment: 'justify');
+                    // epubController.displayPage(page: 3);
                   },
                   onRelocated: (value) async {
                     print("Reloacted to $value");
                     setState(() {
                       progress = value.progress;
                     });
-                    final fontData = await rootBundle.load('assets/fonts/CordiaUPC_M.ttf');
-                    final fontUri = getFontUri(fontData, "font/opentype").toString();
-                    // String base64Font = await fontToBase64("assets/fonts/CordiaUPC_M.ttf");
-                    // epubController.changeFont(base64Font, "CordiaUPC");
-
-                    // String base64Font = await fontToBase64("assets/fonts/Bariol_Regular.otf");
-                    // epubController.injectFontIntoWebView(base64Font, "Bariol");
                   },
                   onAnnotationClicked: (cfi) {
                     print("Annotation clicked $cfi");
