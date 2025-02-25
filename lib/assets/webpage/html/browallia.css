@@ -1,0 +1,8 @@
+@font-face {
+    font-family: "BrowalliaUPC";
+    src: url("BrowalliaNew.ttf") format("truetype");
+}
+
+body {
+    font-family: "BrowalliaUPC", sans-serif !important;
+}

@@ -160,6 +160,16 @@ class EpubController {
         source: 'setFontSize("$fontSize")');
   }
 
+  setFont({required String font}) async {
+    await webViewController?.evaluateJavascript(
+        source: 'setFont("$font")');
+  }
+
+  setFontStyle({required String font, required String styles}) async {
+    await webViewController?.evaluateJavascript(
+        source: 'setFontStyle("$font", "$styles")');
+  }
+
   updateTheme({required EpubTheme theme}) async {
     String? backgroundColor = theme.backgroundColor?.toHex();
     String? foregroundColor = theme.foregroundColor?.toHex();

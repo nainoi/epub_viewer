@@ -1,0 +1,8 @@
+@font-face {
+    font-family: "Khand";
+    src: url("KhandMedium.ttf") format("truetype");
+}
+
+body {
+    font-family: "Khand", sans-serif !important;
+}

@@ -1,3 +1,7 @@
+import 'dart:convert';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_epub_viewer/flutter_epub_viewer.dart';
 import 'package:example/chapter_drawer.dart';
 import 'package:example/search_page.dart';
@@ -57,7 +61,22 @@ class _MyHomePageState extends State<MyHomePage> {
 
   double progress = 0.0;
   
-  EpubFlow _epubFlow = EpubFlow.scrolled;
+  EpubFlow _epubFlow = EpubFlow.paginated;
+
+  String getFontUri(ByteData data, String mime) {
+    final buffer = data.buffer;
+    return Uri.dataFromBytes(
+        buffer.asUint8List(data.offsetInBytes, data.lengthInBytes),
+        mimeType: mime)
+        .toString();
+  }
+
+  Future<String> fontToBase64(String assetPath) async {
+    ByteData bytes = await rootBundle.load(assetPath);
+    List<int> fontBytes = bytes.buffer.asUint8List();
+    String base64Str = base64Encode(fontBytes);
+    return "data:font/ttf;base64,$base64Str";
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -67,7 +86,11 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
+        title: Text(widget.title,style: TextStyle(
+            fontSize: 24,
+            fontFamily: 'CordiaUPC',
+            fontWeight: FontWeight.bold
+        )),
         actions: [
           IconButton(
             icon: const Icon(Icons.search),
@@ -82,7 +105,7 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
           IconButton(
             icon: Text(_epubFlow == EpubFlow.paginated ? 'h' : 'v'),
-            onPressed: () {
+            onPressed: () async {
               if(_epubFlow == EpubFlow.paginated){
                 setState(() {
                   _epubFlow = EpubFlow.scrolled;
@@ -95,6 +118,8 @@ class _MyHomePageState extends State<MyHomePage> {
                   epubController.setFlow(flow: EpubFlow.paginated);
                 });
               }
+              // String base64Font = await fontToBase64("assets/fonts/Bariol_Regular.otf");
+              // epubController.injectFontIntoWebView(base64Font, "Bariol");
             },
           ),
         ],
@@ -111,8 +136,8 @@ class _MyHomePageState extends State<MyHomePage> {
               children: [
                 EpubViewer(
                   epubSource: EpubSource.fromUrl(
-                      // 'https://vocsyinfotech.in/envato/cc/flutter_ebook/uploads/22566_The-Racketeer---John-Grisham.epub'),
-                  'https://github.com/IDPF/epub3-samples/releases/download/20230704/accessible_epub_3.epub'),
+                      'https://vocsyinfotech.in/envato/cc/flutter_ebook/uploads/22566_The-Racketeer---John-Grisham.epub'),
+                  // 'https://github.com/IDPF/epub3-samples/releases/download/20230704/accessible_epub_3.epub'),
                   epubController: epubController,
                   displaySettings: EpubDisplaySettings(
                       flow: _epubFlow,
@@ -144,13 +169,30 @@ class _MyHomePageState extends State<MyHomePage> {
                     setState(() {
                       isLoading = false;
                     });
+                    final fontData = await rootBundle.load('assets/fonts/CordiaUPC_M.ttf');
+                    final fontUri = getFontUri(fontData, "font/opentype").toString();
+                    // epubController.injectFontIntoWebView(base64Font, "CordiaUPC");
+                    // epubController.setFont(font: 'Garuda');
+                    // epubController.setFont(font: 'BrowalliaNew');
+                    // epubController.setFont(font: 'CordiaUPC');
+                    // epubController.setFont(font: 'khand');
+                    // epubController.setFontStyle(font: "Khand", styles: "/dist/khand.css");
+                    // String base64Font = await fontToBase64("assets/fonts/CordiaUPC_M.ttf");
+                    // epubController.injectFontIntoWebView(base64Font, "CordiaUPC");
+                    // epubController.webViewController?.reload();
                   },
-                  onRelocated: (value) {
+                  onRelocated: (value) async {
                     print("Reloacted to $value");
                     setState(() {
                       progress = value.progress;
                     });
-                    // epubController.getCurrentLocation();
+                    final fontData = await rootBundle.load('assets/fonts/CordiaUPC_M.ttf');
+                    final fontUri = getFontUri(fontData, "font/opentype").toString();
+                    // String base64Font = await fontToBase64("assets/fonts/CordiaUPC_M.ttf");
+                    // epubController.changeFont(base64Font, "CordiaUPC");
+
+                    // String base64Font = await fontToBase64("assets/fonts/Bariol_Regular.otf");
+                    // epubController.injectFontIntoWebView(base64Font, "Bariol");
                   },
                   onAnnotationClicked: (cfi) {
                     print("Annotation clicked $cfi");

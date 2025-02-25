@@ -91,7 +91,6 @@
       }else{
         displayed = rendition.display()
       }
-
       displayed.then(function(renderer){
         console.log("displayed")
         window.flutter_inappwebview.callHandler('displayed');
@@ -168,6 +167,12 @@
 
         //set background and foreground color
         updateTheme(backgroundColor,foregroundColor);
+        rendition.themes.registerUrl("khand", "khand.css");
+        rendition.themes.registerUrl("Garuda", "garuda.css");
+        rendition.themes.registerUrl("CordiaUPC", "cordiaupc.css");
+        rendition.themes.registerUrl("BrowalliaUPC", "browallia.css");
+        rendition.themes.registerUrl("FreesiaUPC", "freesia.css");
+        //rendition.themes.select("khand");
     }
 
     window.addEventListener("flutterInAppWebViewPlatformReady", function(event) {
@@ -290,6 +295,18 @@
 
     function setFontSize(fontSize){
       rendition.themes.fontSize(`${fontSize}px`);
+    }
+
+    function setFont(font){
+      //rendition.themes.registerUrl(font, "khand.css");
+      rendition.themes.select(font);
+      rendition.themes.override("font-family", `"'${font}', sans-serif"`);
+    }
+
+    function setFontStyle(name, style){
+      rendition.themes.registerUrl(name, style);
+      rendition.themes.select(name);
+      rendition.themes.override("font-family", `"'${name}', sans-serif"`);
     }
 
     //get current page text

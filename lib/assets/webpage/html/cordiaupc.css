@@ -1,0 +1,8 @@
+@font-face {
+    font-family: "CordiaUPC";
+    src: url("CordiaUPC.ttf") format("truetype");
+}
+
+body {
+    font-family: "CordiaUPC", sans-serif !important;
+}
