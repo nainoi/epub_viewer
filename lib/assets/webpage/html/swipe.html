@@ -305,7 +305,8 @@
 
     function setFont(font){
       //rendition.themes.registerUrl(font, "khand.css");
-      if(font === ''){
+      if(font == ''){
+        console.log("clear theme");
         rendition.themes.select(); // Deselects any theme
         rendition.themes.override("font-family", "");
       }else {

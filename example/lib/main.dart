@@ -116,6 +116,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 setState(() {
                   _epubFlow = EpubFlow.paginated;
                   epubController.setFlow(flow: EpubFlow.paginated);
+                  epubController.setFont(font: "");
                 });
               }
               // String base64Font = await fontToBase64("assets/fonts/Bariol_Regular.otf");
@@ -171,11 +172,10 @@ class _MyHomePageState extends State<MyHomePage> {
                     // epubController.setFont(font: 'BrowalliaUPC');
                     // epubController.setFont(font: 'FreesiaUPC');
                     // epubController.setFont(font: 'BrowalliaNew');
-                    // epubController.setFont(font: 'CordiaUPC');
+                    epubController.setFont(font: 'CordiaUPC');
                     // epubController.setFont(font: 'khand');
                     // epubController.setLineHeight(lineHeight: 1);
                     // epubController.setAlignment(alignment: 'justify');
-                    // epubController.displayPage(page: 3);
                   },
                   onRelocated: (value) async {
                     print("Reloacted to $value");
