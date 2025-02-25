@@ -305,8 +305,13 @@
 
     function setFont(font){
       //rendition.themes.registerUrl(font, "khand.css");
-      rendition.themes.select(font);
-      rendition.themes.override("font-family", `"'${font}', sans-serif"`);
+      if(font === ''){
+        rendition.themes.select(); // Deselects any theme
+        rendition.themes.override("font-family", "");
+      }else {
+        rendition.themes.select(font);
+        rendition.themes.override("font-family", `"'${font}', sans-serif"`);
+      }
     }
 
     function setFontStyle(name, style){
