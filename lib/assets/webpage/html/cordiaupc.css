@@ -6,3 +6,8 @@
 body {
     font-family: "CordiaUPC", sans-serif !important;
 }
+
+.tan {
+	background: tan;
+	color: #ccc;
+}

@@ -6,3 +6,8 @@
 body {
     font-family: "khand", sans-serif !important;
 }
+
+.tan {
+	background: tan;
+	color: #ccc;
+}

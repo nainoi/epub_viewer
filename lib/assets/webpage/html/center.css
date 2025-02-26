@@ -1,3 +1,7 @@
 p, body {
     text-align: center !important;
 }
+.tan {
+	background: tan;
+	color: #ccc;
+}

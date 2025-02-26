@@ -1,3 +1,8 @@
 p, body {
     text-align: justify !important;
 }
+
+.tan {
+	background: tan;
+	color: #ccc;
+}

@@ -331,20 +331,35 @@
 
     function setAlignment(alignment){
       console.log(`align ${alignment}`);
-      rendition.themes.override("text-align", alignment );
-      rendition.themes.override("body", { "text-align": alignment});
-      rendition.themes.override("div", { "text-align": alignment});
-      rendition.themes.override("p", { "text-align": alignment});
-      rendition.themes.default({
+      //rendition.themes.override("text-align", alignment );
+      //rendition.themes.override("body", { "text-align": alignment});
+      //rendition.themes.override("div", { "text-align": alignment});
+      //rendition.themes.override("p", { "text-align": alignment});
+      /*rendition.themes.default({
         "p": { "text-align": alignment },
         "body": { "text-align": alignment }
-      });
+      });*/
       if(alignment == ''){
         console.log("clear theme");
         rendition.themes.select(); // Deselects any theme
         rendition.themes.override("text-align", "");
+        rendition.themes.default({
+    "p": { "text-align": "initial" },
+    "body": { "text-align": "initial" }
+});
       }else {
+        if(alignment == "right"){
+          rendition.themes.registerUrl("right", "right.css");
+        }else if(alignment == "left"){
+          rendition.themes.registerUrl("left", "left.css");
+        }else if(alignment == "center"){
+          rendition.themes.registerUrl("center", "center.css");
+        }else if(alignment == "justify"){
+          rendition.themes.registerUrl("justify", "justify.css");
+        }
         rendition.themes.select(alignment);
+        rendition.themes.default(alignment);
+
       }
     }
 
