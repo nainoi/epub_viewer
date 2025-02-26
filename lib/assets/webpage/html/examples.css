@@ -9,7 +9,6 @@ body {
   /*font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;*/
   font-family: "CordiaUPC", Helvetica, Arial, sans-serif;
   color: #333;
-
   position: absolute;
   height: 100%;
   width: 100%;
@@ -20,7 +19,7 @@ body {
   width: 900px;
   min-height: 18px;
   margin: 10px auto;
-  text-align: center;
+  text-align: left;
   font-size: 16px;
   color: #E2E2E2;
   font-weight: 400;

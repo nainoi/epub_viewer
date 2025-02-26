@@ -172,6 +172,10 @@
         rendition.themes.registerUrl("CordiaUPC", "cordiaupc.css");
         rendition.themes.registerUrl("BrowalliaUPC", "browallia.css");
         rendition.themes.registerUrl("FreesiaUPC", "freesia.css");
+        rendition.themes.registerUrl("right", "right.css");
+        rendition.themes.registerUrl("left", "left.css");
+        rendition.themes.registerUrl("center", "center.css");
+        rendition.themes.registerUrl("justify", "justify.css");
         //rendition.themes.select("khand");
     }
 
@@ -326,8 +330,22 @@
     }
 
     function setAlignment(alignment){
-      rendition.themes.override("text-align", alignment);
-      rendition.themes.override("p", { "text-align": alignment });
+      console.log(`align ${alignment}`);
+      rendition.themes.override("text-align", alignment );
+      rendition.themes.override("body", { "text-align": alignment});
+      rendition.themes.override("div", { "text-align": alignment});
+      rendition.themes.override("p", { "text-align": alignment});
+      rendition.themes.default({
+        "p": { "text-align": alignment },
+        "body": { "text-align": alignment }
+      });
+      if(alignment == ''){
+        console.log("clear theme");
+        rendition.themes.select(); // Deselects any theme
+        rendition.themes.override("text-align", "");
+      }else {
+        rendition.themes.select(alignment);
+      }
     }
 
     //get current page text
