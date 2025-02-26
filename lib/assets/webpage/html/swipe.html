@@ -140,6 +140,11 @@
         window.flutter_inappwebview.callHandler('markClicked',...args);
       })
 
+      rendition.on("click", (event) => {
+        console.log("Single tap detected!", event);
+        window.flutter_inappwebview.callHandler('onTap', event);
+      });
+
       book.ready.then(function(){
         book.locations.generate(1600)
       })

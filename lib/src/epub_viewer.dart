@@ -23,6 +23,7 @@ class EpubViewer extends StatefulWidget {
     this.onAnnotationClicked,
     this.onTapView,
     this.currentChapter,
+    this.onTap,
   });
 
   ///Epub controller to manage epub
@@ -53,6 +54,8 @@ class EpubViewer extends StatefulWidget {
 
   ///Callback for handling annotation click (Highlight and Underline)
   final ValueChanged<String>? onAnnotationClicked;
+
+  final VoidCallback? onTap;
 
   ///context menu for text selection
   ///if null, the default context menu will be used
@@ -149,7 +152,9 @@ class _EpubViewerState extends State<EpubViewer> {
           if (chapters.isEmpty) {
             chapters = widget.epubController.getChapters();
           }
-          EpubChapter? ch = chapters.where((e) => e.href == (loc.location?.start?.href ?? '')).firstOrNull;
+          EpubChapter? ch = chapters
+              .where((e) => e.href == (loc.location?.start?.href ?? ''))
+              .firstOrNull;
           if (ch != null) {
             widget.currentChapter?.call(ch);
           }
@@ -172,6 +177,12 @@ class _EpubViewerState extends State<EpubViewer> {
         callback: (data) {
           String cfi = data[0];
           widget.onAnnotationClicked?.call(cfi);
+        });
+
+    webViewController?.addJavaScriptHandler(
+        handlerName: "onTap",
+        callback: (data) {
+          widget.onTap?.call();
         });
 
     webViewController?.addJavaScriptHandler(
@@ -211,16 +222,7 @@ class _EpubViewerState extends State<EpubViewer> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-        onTap: () {
-          print('object');
-          if (widget.onTapView != null) {
-            widget.onTapView!();
-          }
-        },
-        child: AbsorbPointer(
-            absorbing: false,
-            child: InAppWebView(
+    return InAppWebView(
               contextMenu: widget.selectionContextMenu,
               key: webViewKey,
               initialFile:
@@ -292,7 +294,7 @@ class _EpubViewerState extends State<EpubViewer> {
                     print(details.globalPosition.dx);
                   }),
               },
-            )));
+            );
   }
 
   @override
