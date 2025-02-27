@@ -118,7 +118,7 @@
       rendition.on("relocated", function(location) {
         var percent = location.start.percentage;
         // var percentage = Math.floor(percent * 100);
-        console.log(location);
+        // console.log(location);
         var location  = {
           startCfi: location.start.cfi,
           endCfi:location.end.cfi,
@@ -156,8 +156,8 @@
 
           if (el) {
              console.log('EPUB_TEST_HOOK_IF')
-            detectSwipe(el, function(el,direction){
-              console.log("EPUB_TEST_DIR"+direction.toString())
+             detectSwipe(el, function(el,direction){
+             console.log("EPUB_TEST_DIR"+direction.toString())
 
                 if(direction == 'l'){
                   rendition.next()
@@ -368,6 +368,11 @@
       }
     }
 
+    function setSnap(enable){
+      rendition.flow("paginated");
+      rendition.settings.snap = enable;
+    }
+
     //get current page text
     function getCurrentPageText(){
       var startCfi = rendition.location.start.cfi
@@ -476,7 +481,6 @@
         direc = "";
       },false);  
     }
-
     
   </script>
 

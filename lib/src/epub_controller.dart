@@ -188,6 +188,11 @@ class EpubController {
         source: 'setAlignment("$alignment")');
   }
 
+  setSnap({required bool enable}) async {
+    await webViewController?.evaluateJavascript(
+        source: 'setSnap($enable)');
+  }
+
   updateTheme({required EpubTheme theme}) async {
     String? backgroundColor = theme.backgroundColor?.toHex();
     String? foregroundColor = theme.foregroundColor?.toHex();
