@@ -452,6 +452,7 @@
       var max_y = 50;  //max y difference for horizontal swipe
       var direc = "";
       ele = el
+      console.log(el);
       ele.addEventListener('touchstart',function(e){
         var t = e.touches[0];
         swipe_det.sX = t.screenX; 
@@ -480,6 +481,39 @@
         }
         direc = "";
       },false);  
+    }
+
+
+    function disableSwipe(){
+      console.log(rendition.settings.snap);
+      rendition.hooks.content.register(function(contents, view) {
+        contents.document.documentElement.style.overflow = "hidden"; // Disable horizontal scroll
+        contents.document.body.style.overflow = "hidden";
+
+        contents.document.addEventListener("touchstart", function(event) {
+          event.preventDefault(); // Block swipe
+        }, { passive: false });
+
+        contents.document.addEventListener("touchmove", function(event) {
+          event.preventDefault(); // Block swipe
+        }, { passive: false });
+      });
+    }
+
+    function enableSwipe(){
+      console.log(rendition.settings.snap);
+      rendition.hooks.content.register(function(contents, view) {
+        contents.document.documentElement.style.overflow = "hidden"; // Disable horizontal scroll
+        contents.document.body.style.overflow = "hidden";
+
+        contents.document.removeEventListener("touchstart", function(event) {
+          event.preventDefault(); // Block swipe
+        }, { passive: false });
+
+        contents.document.removeEventListener("touchmove", function(event) {
+          event.preventDefault(); // Block swipe
+        }, { passive: false });
+      });
     }
     
   </script>

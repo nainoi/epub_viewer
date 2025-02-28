@@ -193,6 +193,16 @@ class EpubController {
         source: 'setSnap($enable)');
   }
 
+  disableSwipe() async {
+    await webViewController?.evaluateJavascript(
+        source: 'disableSwipe()');
+  }
+
+  enableSwipe() async {
+    await webViewController?.evaluateJavascript(
+        source: 'enableSwipe()');
+  }
+
   updateTheme({required EpubTheme theme}) async {
     String? backgroundColor = theme.backgroundColor?.toHex();
     String? foregroundColor = theme.foregroundColor?.toHex();

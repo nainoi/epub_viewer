@@ -94,9 +94,11 @@ class _EpubViewerState extends State<EpubViewer> {
       verticalScrollBarEnabled: false,
       // disableVerticalScroll: true,
       disableVerticalScroll: true,
-      disableHorizontalScroll: false,
-      contentInsetAdjustmentBehavior: ScrollViewContentInsetAdjustmentBehavior.SCROLLABLE_AXES,
+      disableHorizontalScroll: true,
+      contentInsetAdjustmentBehavior:
+          ScrollViewContentInsetAdjustmentBehavior.SCROLLABLE_AXES,
       disallowOverScroll: false,
+      isDirectionalLockEnabled: true,
       selectionGranularity: SelectionGranularity.CHARACTER);
 
   // InAppWebViewSettings settings = InAppWebViewSettings(
@@ -274,13 +276,15 @@ class _EpubViewerState extends State<EpubViewer> {
         return NavigationActionPolicy.ALLOW;
       },
       gestureRecognizers: {
-        Factory<VerticalDragGestureRecognizer>(() => VerticalDragGestureRecognizer()),
+        Factory<VerticalDragGestureRecognizer>(
+            () => VerticalDragGestureRecognizer()),
+        Factory<HorizontalDragGestureRecognizer>(
+            () => HorizontalDragGestureRecognizer())
       },
       // gestureRecognizers: Set()
       //   ..add(Factory<OneSequenceGestureRecognizer>(
       //       () => EagerGestureRecognizer())),
-      onLoadStop: (controller, url) async {
-      },
+      onLoadStop: (controller, url) async {},
       onReceivedError: (controller, request, error) {},
 
       onProgressChanged: (controller, progress) {},
