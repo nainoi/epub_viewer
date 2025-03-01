@@ -181,6 +181,7 @@
         rendition.themes.registerUrl("left", "left.css");
         rendition.themes.registerUrl("center", "center.css");
         rendition.themes.registerUrl("justify", "justify.css");
+
         //rendition.themes.select("khand");
     }
 
@@ -398,7 +399,7 @@
     ///update theme
     function updateTheme(backgroundColor, foregroundColor){
       if (backgroundColor && foregroundColor) {
-          rendition.themes.register("dark", { "body": { "background": backgroundColor, "color": foregroundColor } });
+          rendition.themes.register("dark", { "body": { "background": backgroundColor, "color": `${foregroundColor} !important`}, "p": {"color": `${foregroundColor} !important`}, "div": {"color": `${foregroundColor} !important`}, "span": {"color": `${foregroundColor} !important`}, "color": `${foregroundColor} !important` });
           rendition.themes.select("dark");
         }
     }
