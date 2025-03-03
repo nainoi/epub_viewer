@@ -331,9 +331,25 @@
       rendition.themes.override("font-family", `"'${name}', sans-serif"`);
     }
 
-    function setLineHeight(line){
-      rendition.themes.override("line-height", line);
-    }
+    function setLineHeight(line) {
+  rendition.themes.default({
+    "body": { "line-height": `${line}` },
+    "p": { "line-height": `${line} !important` },
+    "div": { "line-height": `${line} !important` },
+    "span": { "line-height": `${line} !important` },
+    "line-height": `${line} !important`,
+  });
+
+  rendition.themes.override({
+    "body": { "line-height": `${line}` },
+    "p": { "line-height": `${line} !important` },
+    "div": { "line-height": `${line} !important` },
+    "span": { "line-height": `${line} !important` },
+    "line-height": `${line} !important`,
+  });
+
+  rendition.themes.override("line-height", line);
+}
 
     function setAlignment(alignment){
       console.log(`align ${alignment}`);
