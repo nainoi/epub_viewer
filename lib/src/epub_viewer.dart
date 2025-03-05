@@ -92,13 +92,13 @@ class _EpubViewerState extends State<EpubViewer> {
       iframeAllowFullscreen: true,
       allowsLinkPreview: false,
       verticalScrollBarEnabled: false,
-      disableVerticalScroll: false,
+      disableVerticalScroll: true,
       disableHorizontalScroll: false,
       horizontalScrollBarEnabled: false,
       contentInsetAdjustmentBehavior:
           ScrollViewContentInsetAdjustmentBehavior.SCROLLABLE_AXES,
-      disallowOverScroll: false,
-      isDirectionalLockEnabled: false,
+      disallowOverScroll: true,
+      isDirectionalLockEnabled: true,
       selectionGranularity: SelectionGranularity.CHARACTER);
 
   // InAppWebViewSettings settings = InAppWebViewSettings(
