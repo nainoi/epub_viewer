@@ -83,7 +83,7 @@ class _EpubViewerState extends State<EpubViewer> {
   InAppWebViewSettings settings = InAppWebViewSettings(
       isInspectable: kDebugMode,
       javaScriptEnabled: true,
-      mediaPlaybackRequiresUserGesture: true,
+      mediaPlaybackRequiresUserGesture: false,
       transparentBackground: true,
       supportZoom: false,
       allowsInlineMediaPlayback: true,
@@ -92,7 +92,7 @@ class _EpubViewerState extends State<EpubViewer> {
       iframeAllowFullscreen: true,
       allowsLinkPreview: false,
       verticalScrollBarEnabled: false,
-      disableVerticalScroll: true,
+      disableVerticalScroll: false, // is ios true
       disableHorizontalScroll: false,
       horizontalScrollBarEnabled: false,
       contentInsetAdjustmentBehavior:
@@ -100,13 +100,6 @@ class _EpubViewerState extends State<EpubViewer> {
       disallowOverScroll: true,
       isDirectionalLockEnabled: true,
       selectionGranularity: SelectionGranularity.CHARACTER);
-
-  // InAppWebViewSettings settings = InAppWebViewSettings(
-  //   allowsInlineMediaPlayback: true, // Fix iOS scrolling issues
-  //   disableVerticalScroll: false,
-  //   disableHorizontalScroll: false, // Prevent accidental horizontal scroll
-  //   disallowOverScroll: false, // Prevent rubber-band effect on iOS
-  // );
 
   @override
   void initState() {
