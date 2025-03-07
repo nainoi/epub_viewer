@@ -24,7 +24,10 @@ class EpubViewer extends StatefulWidget {
     this.onTapView,
     this.currentChapter,
     this.onTap,
+    this.disableVerticalScroll,
   });
+
+  final bool? disableVerticalScroll;
 
   ///Epub controller to manage epub
   final EpubController epubController;
@@ -80,34 +83,41 @@ class _EpubViewerState extends State<EpubViewer> {
 
   InAppWebViewController? webViewController;
 
-  InAppWebViewSettings settings = InAppWebViewSettings(
-      isInspectable: kDebugMode,
-      javaScriptEnabled: true,
-      mediaPlaybackRequiresUserGesture: false,
-      transparentBackground: true,
-      supportZoom: false,
-      allowsInlineMediaPlayback: true,
-      disableLongPressContextMenuOnLinks: true,
-      disableContextMenu: true,
-      iframeAllowFullscreen: true,
-      allowsLinkPreview: false,
-      verticalScrollBarEnabled: false,
-      disableVerticalScroll: false, // is ios true
-      disableHorizontalScroll: false,
-      horizontalScrollBarEnabled: false,
-      contentInsetAdjustmentBehavior:
-          ScrollViewContentInsetAdjustmentBehavior.SCROLLABLE_AXES,
-      disallowOverScroll: true,
-      isDirectionalLockEnabled: true,
-      selectionGranularity: SelectionGranularity.CHARACTER);
+  late InAppWebViewSettings settings;
+
+  bool disableVerticalScroll = false;
 
   @override
   void initState() {
     // widget.epubController.initServer();
+    settings = InAppWebViewSettings(
+        isInspectable: kDebugMode,
+        javaScriptEnabled: true,
+        mediaPlaybackRequiresUserGesture: false,
+        transparentBackground: true,
+        supportZoom: false,
+        allowsInlineMediaPlayback: true,
+        disableLongPressContextMenuOnLinks: true,
+        disableContextMenu: true,
+        iframeAllowFullscreen: true,
+        allowsLinkPreview: false,
+        verticalScrollBarEnabled: false,
+        disableVerticalScroll: disableVerticalScroll,  // is ios true
+        disableHorizontalScroll: false,
+        horizontalScrollBarEnabled: false,
+        contentInsetAdjustmentBehavior:
+        ScrollViewContentInsetAdjustmentBehavior.SCROLLABLE_AXES,
+        disallowOverScroll: true,
+        isDirectionalLockEnabled: true,
+        selectionGranularity: SelectionGranularity.CHARACTER);
+    disableVerticalScroll = widget.disableVerticalScroll ?? false;
     super.initState();
   }
 
   addJavaScriptHandlers() {
+    if (webViewController == null) {
+      return;
+    }
     webViewController?.addJavaScriptHandler(
         handlerName: "displayed",
         callback: (data) {
@@ -209,6 +219,9 @@ class _EpubViewerState extends State<EpubViewer> {
   }
 
   loadBook() async {
+    setState(() {
+      disableVerticalScroll = widget.disableVerticalScroll ?? false;
+    });
     var data = await widget.epubSource.epubData;
     final displaySettings = widget.displaySettings ?? EpubDisplaySettings();
     String manager = displaySettings.manager.name;
@@ -236,74 +249,86 @@ class _EpubViewerState extends State<EpubViewer> {
   @override
   Widget build(BuildContext context) {
     return InAppWebView(
-          contextMenu: widget.selectionContextMenu,
-          key: webViewKey,
-          initialFile:
-              'packages/flutter_epub_viewer/lib/assets/webpage/html/swipe.html',
-          // initialUrlRequest: URLRequest(
-          //     url: WebUri(
-          //         'http://localhost:8080/html/swipe.html?cfi=${widget.initialCfi ?? ''}&displaySettings=$displaySettings')),
-          initialSettings: settings,
-          // pullToRefreshController: pullToRefreshController,
-          onWebViewCreated: (controller) async {
-            webViewController = controller;
-            widget.epubController.setWebViewController(controller);
-            // await loadBook();
-            addJavaScriptHandlers();
-          },
-          onLoadStart: (controller, url) {},
-          onPermissionRequest: (controller, request) async {
-            return PermissionResponse(
-                resources: request.resources,
-                action: PermissionResponseAction.GRANT);
-          },
-          shouldOverrideUrlLoading: (controller, navigationAction) async {
-            var uri = navigationAction.request.url!;
+      contextMenu: widget.selectionContextMenu,
+      key: webViewKey,
+      initialFile:
+          'packages/flutter_epub_viewer/lib/assets/webpage/html/swipe.html',
+      // initialUrlRequest: URLRequest(
+      //     url: WebUri(
+      //         'http://localhost:8080/html/swipe.html?cfi=${widget.initialCfi ?? ''}&displaySettings=$displaySettings')),
+      initialSettings: InAppWebViewSettings(
+          isInspectable: kDebugMode,
+          javaScriptEnabled: true,
+          mediaPlaybackRequiresUserGesture: false,
+          transparentBackground: true,
+          supportZoom: false,
+          allowsInlineMediaPlayback: true,
+          disableLongPressContextMenuOnLinks: true,
+          disableContextMenu: true,
+          iframeAllowFullscreen: true,
+          allowsLinkPreview: false,
+          verticalScrollBarEnabled: false,
+          disableVerticalScroll: disableVerticalScroll,  // is ios true
+          disableHorizontalScroll: false,
+          horizontalScrollBarEnabled: false,
+          contentInsetAdjustmentBehavior:
+          ScrollViewContentInsetAdjustmentBehavior.SCROLLABLE_AXES,
+          disallowOverScroll: true,
+          isDirectionalLockEnabled: true,
+          selectionGranularity: SelectionGranularity.CHARACTER),
+      // pullToRefreshController: pullToRefreshController,
+      onWebViewCreated: (controller) async {
+        webViewController = controller;
+        widget.epubController.setWebViewController(controller);
+        // await loadBook();
+        addJavaScriptHandlers();
+      },
+      onLoadStart: (controller, url) {},
+      onPermissionRequest: (controller, request) async {
+        return PermissionResponse(
+            resources: request.resources,
+            action: PermissionResponseAction.GRANT);
+      },
+      shouldOverrideUrlLoading: (controller, navigationAction) async {
+        var uri = navigationAction.request.url!;
 
-            if (![
-              "http",
-              "https",
-              "file",
-              "chrome",
-              "data",
-              "javascript",
-              "about"
-            ].contains(uri.scheme)) {
-              // if (await canLaunchUrl(uri)) {
-              //   // Launch the App
-              //   await launchUrl(
-              //     uri,
-              //   );
-              //   // and cancel the request
-              //   return NavigationActionPolicy.CANCEL;
-              // }
-            }
+        if (!["http", "https", "file", "chrome", "data", "javascript", "about"]
+            .contains(uri.scheme)) {
+          // if (await canLaunchUrl(uri)) {
+          //   // Launch the App
+          //   await launchUrl(
+          //     uri,
+          //   );
+          //   // and cancel the request
+          //   return NavigationActionPolicy.CANCEL;
+          // }
+        }
 
-            return NavigationActionPolicy.ALLOW;
-          },
-          gestureRecognizers: {
-            Factory<VerticalDragGestureRecognizer>(
-                () => VerticalDragGestureRecognizer()),
-            Factory<HorizontalDragGestureRecognizer>(
-                () => HorizontalDragGestureRecognizer())
-          },
-          onLoadStop: (controller, url) async {},
-          onReceivedError: (controller, request, error) {},
+        return NavigationActionPolicy.ALLOW;
+      },
+      gestureRecognizers: {
+        Factory<VerticalDragGestureRecognizer>(
+            () => VerticalDragGestureRecognizer()),
+        Factory<HorizontalDragGestureRecognizer>(
+            () => HorizontalDragGestureRecognizer())
+      },
+      onLoadStop: (controller, url) async {},
+      onReceivedError: (controller, request, error) {},
 
-          onProgressChanged: (controller, progress) {},
-          onUpdateVisitedHistory: (controller, url, androidIsReload) {},
-          onConsoleMessage: (controller, consoleMessage) {
-            if (kDebugMode) {
-              debugPrint("JS_LOG: ${consoleMessage.message}");
-              // debugPrint(consoleMessage.message);
-            }
-          },
-        );
+      onProgressChanged: (controller, progress) {},
+      onUpdateVisitedHistory: (controller, url, androidIsReload) {},
+      onConsoleMessage: (controller, consoleMessage) {
+        if (kDebugMode) {
+          debugPrint("JS_LOG: ${consoleMessage.message}");
+          // debugPrint(consoleMessage.message);
+        }
+      },
+    );
   }
 
   @override
   void dispose() {
-    webViewController?.dispose();
+    // webViewController?.dispose();
     super.dispose();
   }
 }

@@ -77,6 +77,8 @@ class EpubDisplaySettings {
   /// Font size of the reader
   int fontSize;
 
+  String font;
+
   /// Page spread settings
   EpubSpread spread;
 
@@ -104,6 +106,7 @@ class EpubDisplaySettings {
 
   EpubDisplaySettings({
     this.fontSize = 15,
+    this.font = 'khand',
     this.spread = EpubSpread.auto,
     this.flow = EpubFlow.paginated,
     this.allowScriptedContent = false,

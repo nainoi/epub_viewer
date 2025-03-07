@@ -256,6 +256,18 @@ class EpubController {
     toProgressPercentage(1.0);
   }
 
+  gotoPage(int page) {
+    checkEpubLoaded();
+    webViewController?.evaluateJavascript(
+        source: 'goToPage($page)');
+  }
+
+  getLocations() {
+    checkEpubLoaded();
+    webViewController?.evaluateJavascript(
+        source: 'getLocations()');
+  }
+
   checkEpubLoaded() {
     if (webViewController == null) {
       throw Exception(
