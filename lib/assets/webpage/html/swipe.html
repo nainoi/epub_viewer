@@ -19,6 +19,7 @@
         -webkit-align-items: start;
         -webkit-justify-content: center;
         justify-content: center;
+        background: transparent;
       }
 
       #viewer {
@@ -29,7 +30,7 @@
         /* box-shadow: 0 0 4px #ccc; */
         /* padding: 10px 10px 0px 10px; */
         /*margin: 5px 5px auto;*/
-        background: white;
+        background: transparent;
       }
 
       @media only screen and (min-device-width: 320px) and (max-device-width: 667px) {
@@ -81,6 +82,8 @@
       ) {
         var viewportHeight = window.innerHeight;
         document.getElementById("viewer").style.height = viewportHeight;
+        document.body.style.background = backgroundColor;
+        document.getElementById("viewer").style.background = backgroundColor;
         var uint8Array = new Uint8Array(data);
         book.open(uint8Array);
         rendition = book.renderTo("viewer", {
