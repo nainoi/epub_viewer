@@ -1,567 +1,571 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="utf-8" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>EPUB</title>
-  <!-- <script src="http://code.jquery.com/jquery-2.1.4.min.js"></script> -->
-  <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/detect_swipe/2.1.1/jquery.detect_swipe.min.js"></script> -->
-  <script src="../dist/jszip.min.js"></script>
-  <script src="../dist/epub.js"></script>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>EPUB</title>
+    <!-- <script src="http://code.jquery.com/jquery-2.1.4.min.js"></script> -->
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/detect_swipe/2.1.1/jquery.detect_swipe.min.js"></script> -->
+    <script src="../dist/jszip.min.js"></script>
+    <script src="../dist/epub.js"></script>
 
-  <link rel="stylesheet" type="text/css" href="examples.css" />
+    <link rel="stylesheet" type="text/css" href="examples.css" />
 
-  <style type="text/css">
-    body {
-      display: flex;
-      -webkit-align-items: center;
-      -webkit-justify-content: center;
-    }
+    <style type="text/css">
+      body {
+        display: flex;
+        align-items: start;
+        -webkit-align-items: start;
+        -webkit-justify-content: center;
+        justify-content: center;
+      }
 
-    #viewer {
-      width: 100%;
-      height: 100%;
-      /* width: 400px;
-    height: 580px; */
-      /* box-shadow: 0 0 4px #ccc; */
-      /* padding: 10px 10px 0px 10px; */
-      margin: 5px 5px auto;
-      background: white;
-    }
-
-    @media only screen and (min-device-width: 320px) and (max-device-width: 667px) {
       #viewer {
-         height: 100vh;
+        width: 100%;
+        height: 100%;
+        /* width: 400px;
+    height: 580px; */
+        /* box-shadow: 0 0 4px #ccc; */
+        /* padding: 10px 10px 0px 10px; */
+        margin: 5px 5px auto;
+        background: white;
       }
-      #viewer iframe {
-        /* pointer-events: none; */
-      }
-      .arrow {
-        position: inherit;
-        display: none;
-      }
-    }
-  </style>
-</head>
-<body>
-<div id="viewer"></div>
-<script>
-  var params =
-    URLSearchParams &&
-    new URLSearchParams(document.location.search.substring(1));
-  // var epubUrl = params && params.get("epubUrl") && decodeURIComponent(params.get("epubUrl"));
-  var accessToken =
-    params && params.get("accessToken")
-      ? params.get("accessToken")
-      : undefined;
-  // var cfi = (params && params.get("cfi")) ? params.get("cfi") : undefined;
-  // var displaySettings= (params && params.get("displaySettings")) ? params.get("displaySettings") : undefined;
 
-  //loading epub
-  var book = ePub();
-  var rendition;
-  var displayed;
-  var chapters = [];
-
-  function loadBook(
-    data,
-    cfi,
-    manager,
-    flow,
-    spread,
-    snap,
-    allowScriptedContent,
-    direction,
-    useCustomSwipe,
-    backgroundColor,
-    foregroundColor
-  ) {
-    var viewportHeight = window.innerHeight;
-    document.getElementById("viewer").style.height = viewportHeight;
-    var uint8Array = new Uint8Array(data);
-    book.open(uint8Array);
-    rendition = book.renderTo("viewer", {
-      manager: manager,
-      flow: flow,
-      // method: "continuous",
-      spread: spread,
-      width: "100vw",
-      height: "100vh",
-      snap: snap && !useCustomSwipe,
-      allowScriptedContent: allowScriptedContent,
-      defaultDirection: direction,
-    });
-
-    if (cfi) {
-      displayed = rendition.display(cfi);
-    } else {
-      displayed = rendition.display();
-    }
-    displayed.then(function (renderer) {
-      console.log("displayed");
-      window.flutter_inappwebview.callHandler("displayed");
-    });
-
-    book.loaded.navigation.then(function (toc) {
-      chapters = parseChapters(toc);
-      window.flutter_inappwebview.callHandler("chapters");
-    });
-
-    rendition.on("rendered", function () {
-      window.flutter_inappwebview.callHandler("rendered");
-    });
-
-    ///text selection callback
-    rendition.on("selected", function (cfiRange, contents) {
-      book.getRange(cfiRange).then(function (range) {
-        var selectedText = range.toString();
-        var args = [cfiRange.toString(), selectedText];
-        window.flutter_inappwebview.callHandler("selection", ...args);
-      });
-    });
-
-    //book location changes callback
-    rendition.on("relocated", function (location) {
-      var percent = location.start.percentage;
-      // var percentage = Math.floor(percent * 100);
-      // console.log(location);
-      var location = {
-        startCfi: location.start.cfi,
-        endCfi: location.end.cfi,
-        progress: percent,
-        location: location,
-      };
-      var args = [location];
-      window.flutter_inappwebview.callHandler("relocated", ...args);
-    });
-
-    rendition.on("displayError", function (e) {
-      console.log("displayError");
-      window.flutter_inappwebview.callHandler("displayError");
-    });
-
-    rendition.on("markClicked", function (cfiRange) {
-      console.log("markClicked");
-      var args = [cfiRange.toString()];
-      window.flutter_inappwebview.callHandler("markClicked", ...args);
-    });
-
-    rendition.on("click", (event) => {
-      console.log("Single tap detected!", event);
-      window.flutter_inappwebview.callHandler("onTap", event);
-    });
-
-    book.ready.then(function () {
-      book.locations.generate(1000);
-    });
-
-    rendition.hooks.content.register((contents) => {
-      if (useCustomSwipe) {
-        const el = contents.document.documentElement;
-
-        if (el) {
-          console.log("EPUB_TEST_HOOK_IF");
-          detectSwipe(el, function (el, direction) {
-            console.log("EPUB_TEST_DIR" + direction.toString());
-
-            if (direction == "l") {
-              rendition.next();
-            }
-            if (direction == "r") {
-              rendition.prev();
-            }
-          });
+      @media only screen and (min-device-width: 320px) and (max-device-width: 667px) {
+        #viewer {
+          height: 100vh;
+        }
+        #viewer iframe {
+          /* pointer-events: none; */
+        }
+        .arrow {
+          position: inherit;
+          display: none;
         }
       }
-    });
+    </style>
+  </head>
+  <body>
+    <div id="viewer"></div>
+    <script>
+      var params =
+        URLSearchParams &&
+        new URLSearchParams(document.location.search.substring(1));
+      // var epubUrl = params && params.get("epubUrl") && decodeURIComponent(params.get("epubUrl"));
+      var accessToken =
+        params && params.get("accessToken")
+          ? params.get("accessToken")
+          : undefined;
+      // var cfi = (params && params.get("cfi")) ? params.get("cfi") : undefined;
+      // var displaySettings= (params && params.get("displaySettings")) ? params.get("displaySettings") : undefined;
 
-    //set background and foreground color
-    updateTheme(backgroundColor, foregroundColor);
-    rendition.themes.registerUrl("khand", "khand.css");
-    rendition.themes.registerUrl("Garuda", "garuda.css");
-    rendition.themes.registerUrl("CordiaUPC", "cordiaupc.css");
-    rendition.themes.registerUrl("BrowalliaUPC", "browallia.css");
-    rendition.themes.registerUrl("FreesiaUPC", "freesia.css");
-    rendition.themes.registerUrl("right", "right.css");
-    rendition.themes.registerUrl("left", "left.css");
-    rendition.themes.registerUrl("center", "center.css");
-    rendition.themes.registerUrl("justify", "justify.css");
+      //loading epub
+      var book = ePub();
+      var rendition;
+      var displayed;
+      var chapters = [];
 
-    //rendition.themes.select("khand");
-  }
+      function loadBook(
+        data,
+        cfi,
+        manager,
+        flow,
+        spread,
+        snap,
+        allowScriptedContent,
+        direction,
+        useCustomSwipe,
+        backgroundColor,
+        foregroundColor
+      ) {
+        var viewportHeight = window.innerHeight;
+        document.getElementById("viewer").style.height = viewportHeight;
+        var uint8Array = new Uint8Array(data);
+        book.open(uint8Array);
+        rendition = book.renderTo("viewer", {
+          manager: manager,
+          flow: flow,
+          // method: "continuous",
+          spread: spread,
+          width: "100vw",
+          height: "100vh",
+          snap: snap && !useCustomSwipe,
+          allowScriptedContent: allowScriptedContent,
+          defaultDirection: direction,
+        });
 
-  window.addEventListener(
-    "flutterInAppWebViewPlatformReady",
-    function (event) {
-      window.flutter_inappwebview.callHandler("readyToLoad");
-    }
-  );
+        if (cfi) {
+          displayed = rendition.display(cfi);
+        } else {
+          displayed = rendition.display();
+        }
+        displayed.then(function (renderer) {
+          console.log("displayed");
+          window.flutter_inappwebview.callHandler("displayed");
+        });
 
-  //move to next page
-  function next() {
-    rendition.next();
-  }
+        book.loaded.navigation.then(function (toc) {
+          chapters = parseChapters(toc);
+          window.flutter_inappwebview.callHandler("chapters");
+        });
 
-  //move to previous page
-  function previous() {
-    rendition.prev();
-  }
+        rendition.on("rendered", function () {
+          window.flutter_inappwebview.callHandler("rendered");
+        });
 
-  //move to given cfi location
-  function toCfi(cfi) {
-    rendition.display(cfi);
-  }
+        ///text selection callback
+        rendition.on("selected", function (cfiRange, contents) {
+          book.getRange(cfiRange).then(function (range) {
+            var selectedText = range.toString();
+            var args = [cfiRange.toString(), selectedText];
+            window.flutter_inappwebview.callHandler("selection", ...args);
+          });
+        });
 
-  //move to given cfi location
-  function goto(page) {
-    console.log(`go to page ${page}`);
-    rendition.display(page);
-  }
+        //book location changes callback
+        rendition.on("relocated", function (location) {
+          var percent = location.start.percentage;
+          // var percentage = Math.floor(percent * 100);
+          // console.log(location);
+          var location = {
+            startCfi: location.start.cfi,
+            endCfi: location.end.cfi,
+            progress: percent,
+            location: location,
+          };
+          var args = [location];
+          window.flutter_inappwebview.callHandler("relocated", ...args);
+        });
 
-  //get all chapters
-  function getChapters() {
-    return chapters;
-  }
+        rendition.on("displayError", function (e) {
+          console.log("displayError");
+          window.flutter_inappwebview.callHandler("displayError");
+        });
 
-  function getCurrentLocation() {
-    var percent = rendition.location.start.percentage;
-    // var percentage = Math.floor(percent * 100);
-    var location = {
-      startCfi: rendition.location.start.cfi,
-      endCfi: rendition.location.end.cfi,
-      progress: percent,
-    };
-    return location;
-  }
+        rendition.on("markClicked", function (cfiRange) {
+          console.log("markClicked");
+          var args = [cfiRange.toString()];
+          window.flutter_inappwebview.callHandler("markClicked", ...args);
+        });
 
-  ///parsing chapters and subitems recursively
-  var parseChapters = function (toc) {
-    var chapters = [];
-    toc.forEach(function (chapter) {
-      chapters.push({
-        title: chapter.label,
-        href: chapter.href,
-        id: chapter.id,
-        subitems: parseChapters(chapter.subitems),
-      });
-    });
-    return chapters;
-  };
+        rendition.on("click", (event) => {
+          console.log("Single tap detected!", event);
+          window.flutter_inappwebview.callHandler("onTap", event);
+        });
 
-  function searchInBook(query) {
-    search(query).then(function (data) {
-      var args = [data];
-      window.flutter_inappwebview.callHandler("search", ...args);
-    });
-  }
+        book.ready.then(function () {
+          book.locations.generate(1000);
+        });
 
-  // adds highlight with given color
-  function addHighlight(cfiRange, color, opacity) {
-    rendition.annotations.highlight(
-      cfiRange,
-      {},
-      (e) => {
-        // console.log("highlight clicked", e.target);
-      },
-      "hl",
-      { fill: color, "fill-opacity": "0.3", "mix-blend-mode": "multiply" }
-    );
-  }
+        rendition.hooks.content.register((contents) => {
+          if (useCustomSwipe) {
+            const el = contents.document.documentElement;
 
-  function addUnderLine(cfiString) {
-    rendition.annotations.underline(cfiString);
-  }
+            if (el) {
+              console.log("EPUB_TEST_HOOK_IF");
+              detectSwipe(el, function (el, direction) {
+                console.log("EPUB_TEST_DIR" + direction.toString());
 
-  function addMark(cfiString) {
-    rendition.annotations.mark(cfiString);
-  }
+                if (direction == "l") {
+                  rendition.next();
+                }
+                if (direction == "r") {
+                  rendition.prev();
+                }
+              });
+            }
+          }
+        });
 
-  function removeHighlight(cfiString) {
-    rendition.annotations.remove(cfiString, "highlight");
-  }
+        //set background and foreground color
+        updateTheme(backgroundColor, foregroundColor);
+        rendition.themes.registerUrl("khand", "khand.css");
+        rendition.themes.registerUrl("Garuda", "garuda.css");
+        rendition.themes.registerUrl("CordiaUPC", "cordiaupc.css");
+        rendition.themes.registerUrl("BrowalliaUPC", "browallia.css");
+        rendition.themes.registerUrl("FreesiaUPC", "freesia.css");
+        rendition.themes.registerUrl("right", "right.css");
+        rendition.themes.registerUrl("left", "left.css");
+        rendition.themes.registerUrl("center", "center.css");
+        rendition.themes.registerUrl("justify", "justify.css");
 
-  function removeUnderLine(cfiString) {
-    rendition.annotations.remove(cfiString, "underline");
-  }
+        //rendition.themes.select("khand");
+      }
 
-  function removeMark(cfiString) {
-    rendition.annotations.remove(cfiString, "mark");
-  }
+      window.addEventListener(
+        "flutterInAppWebViewPlatformReady",
+        function (event) {
+          window.flutter_inappwebview.callHandler("readyToLoad");
+        }
+      );
 
-  function toProgress(progress) {
-    var cfi = book.locations.cfiFromPercentage(progress);
-    rendition.display(cfi);
-  }
+      //move to next page
+      function next() {
+        rendition.next();
+      }
 
-  function search(q) {
-    return Promise.all(
-      book.spine.spineItems.map((item) =>
-        item
-          .load(book.load.bind(book))
-          .then(item.find.bind(item, q))
-          .finally(item.unload.bind(item))
-      )
-    ).then((results) => Promise.resolve([].concat.apply([], results)));
-  }
+      //move to previous page
+      function previous() {
+        rendition.prev();
+      }
 
-  function setFontSize(fontSize) {
-    rendition.themes.default({
-      p: {
-        // "margin": '10px',
-        "font-size": `${fontSize}px`,
-      },
-    });
-  }
+      //move to given cfi location
+      function toCfi(cfi) {
+        rendition.display(cfi);
+      }
 
-  function setSpread(spread) {
-    rendition.spread(spread);
-  }
+      //move to given cfi location
+      function goto(page) {
+        console.log(`go to page ${page}`);
+        rendition.display(page);
+      }
 
-  function setFlow(flow) {
-    rendition.flow(flow);
-  }
+      //get all chapters
+      function getChapters() {
+        return chapters;
+      }
 
-  function setManager(manager) {
-    rendition.manager(manager);
-  }
+      function getCurrentLocation() {
+        var percent = rendition.location.start.percentage;
+        // var percentage = Math.floor(percent * 100);
+        var location = {
+          startCfi: rendition.location.start.cfi,
+          endCfi: rendition.location.end.cfi,
+          progress: percent,
+        };
+        return location;
+      }
 
-  function setFontSize(fontSize) {
-    rendition.themes.fontSize(`${fontSize}px`);
-  }
+      ///parsing chapters and subitems recursively
+      var parseChapters = function (toc) {
+        var chapters = [];
+        toc.forEach(function (chapter) {
+          chapters.push({
+            title: chapter.label,
+            href: chapter.href,
+            id: chapter.id,
+            subitems: parseChapters(chapter.subitems),
+          });
+        });
+        return chapters;
+      };
 
-  function setFont(font) {
-    //rendition.themes.registerUrl(font, "khand.css");
-    if (font == "") {
-      console.log("clear theme");
-      rendition.themes.select(); // Deselects any theme
-      rendition.themes.override("font-family", "");
-    } else {
-      rendition.themes.select(font);
-      rendition.themes.override("font-family", `"'${font}', sans-serif"`);
-    }
-  }
+      function searchInBook(query) {
+        search(query).then(function (data) {
+          var args = [data];
+          window.flutter_inappwebview.callHandler("search", ...args);
+        });
+      }
 
-  function setFontStyle(name, style) {
-    rendition.themes.registerUrl(name, style);
-    rendition.themes.select(name);
-    rendition.themes.override("font-family", `"'${name}', sans-serif"`);
-  }
+      // adds highlight with given color
+      function addHighlight(cfiRange, color, opacity) {
+        rendition.annotations.highlight(
+          cfiRange,
+          {},
+          (e) => {
+            // console.log("highlight clicked", e.target);
+          },
+          "hl",
+          { fill: color, "fill-opacity": "0.3", "mix-blend-mode": "multiply" }
+        );
+      }
 
-  function setLineHeight(line) {
-    rendition.themes.default({
-      body: { "line-height": `${line}` },
-      p: { "line-height": `${line} !important` },
-      div: { "line-height": `${line} !important` },
-      span: { "line-height": `${line} !important` },
-      "line-height": `${line} !important`,
-    });
+      function addUnderLine(cfiString) {
+        rendition.annotations.underline(cfiString);
+      }
 
-    rendition.themes.override({
-      body: { "line-height": `${line}` },
-      p: { "line-height": `${line} !important` },
-      div: { "line-height": `${line} !important` },
-      span: { "line-height": `${line} !important` },
-      "line-height": `${line} !important`,
-    });
+      function addMark(cfiString) {
+        rendition.annotations.mark(cfiString);
+      }
 
-    rendition.themes.override("line-height", line);
-  }
+      function removeHighlight(cfiString) {
+        rendition.annotations.remove(cfiString, "highlight");
+      }
 
-  function goToPage(pageIndex) {
-    var cfi = book.locations.cfiFromPercentage((pageIndex/book.locations.length()));
-    rendition.display(cfi);
-  }
+      function removeUnderLine(cfiString) {
+        rendition.annotations.remove(cfiString, "underline");
+      }
 
-  function getLocations() {
-    return [book.locations];
-  }
+      function removeMark(cfiString) {
+        rendition.annotations.remove(cfiString, "mark");
+      }
 
-  function setAlignment(alignment) {
-    console.log(`align ${alignment}`);
-    //rendition.themes.override("text-align", alignment );
-    //rendition.themes.override("body", { "text-align": alignment});
-    //rendition.themes.override("div", { "text-align": alignment});
-    //rendition.themes.override("p", { "text-align": alignment});
-    /*rendition.themes.default({
+      function toProgress(progress) {
+        var cfi = book.locations.cfiFromPercentage(progress);
+        rendition.display(cfi);
+      }
+
+      function search(q) {
+        return Promise.all(
+          book.spine.spineItems.map((item) =>
+            item
+              .load(book.load.bind(book))
+              .then(item.find.bind(item, q))
+              .finally(item.unload.bind(item))
+          )
+        ).then((results) => Promise.resolve([].concat.apply([], results)));
+      }
+
+      function setFontSize(fontSize) {
+        rendition.themes.default({
+          p: {
+            // "margin": '10px',
+            "font-size": `${fontSize}px`,
+          },
+        });
+      }
+
+      function setSpread(spread) {
+        rendition.spread(spread);
+      }
+
+      function setFlow(flow) {
+        rendition.flow(flow);
+      }
+
+      function setManager(manager) {
+        rendition.manager(manager);
+      }
+
+      function setFontSize(fontSize) {
+        rendition.themes.fontSize(`${fontSize}px`);
+      }
+
+      function setFont(font) {
+        //rendition.themes.registerUrl(font, "khand.css");
+        if (font == "") {
+          console.log("clear theme");
+          rendition.themes.select(); // Deselects any theme
+          rendition.themes.override("font-family", "");
+        } else {
+          rendition.themes.select(font);
+          rendition.themes.override("font-family", `"'${font}', sans-serif"`);
+        }
+      }
+
+      function setFontStyle(name, style) {
+        rendition.themes.registerUrl(name, style);
+        rendition.themes.select(name);
+        rendition.themes.override("font-family", `"'${name}', sans-serif"`);
+      }
+
+      function setLineHeight(line) {
+        rendition.themes.default({
+          body: { "line-height": `${line}` },
+          p: { "line-height": `${line} !important` },
+          div: { "line-height": `${line} !important` },
+          span: { "line-height": `${line} !important` },
+          "line-height": `${line} !important`,
+        });
+
+        rendition.themes.override({
+          body: { "line-height": `${line}` },
+          p: { "line-height": `${line} !important` },
+          div: { "line-height": `${line} !important` },
+          span: { "line-height": `${line} !important` },
+          "line-height": `${line} !important`,
+        });
+
+        rendition.themes.override("line-height", line);
+      }
+
+      function goToPage(pageIndex) {
+        var cfi = book.locations.cfiFromPercentage(
+          pageIndex / book.locations.length()
+        );
+        rendition.display(cfi);
+      }
+
+      function getLocations() {
+        return [book.locations];
+      }
+
+      function setAlignment(alignment) {
+        console.log(`align ${alignment}`);
+        //rendition.themes.override("text-align", alignment );
+        //rendition.themes.override("body", { "text-align": alignment});
+        //rendition.themes.override("div", { "text-align": alignment});
+        //rendition.themes.override("p", { "text-align": alignment});
+        /*rendition.themes.default({
     "p": { "text-align": alignment },
     "body": { "text-align": alignment }
   });*/
-    if (alignment == "") {
-      console.log("clear theme");
-      rendition.themes.select(); // Deselects any theme
-      rendition.themes.override("text-align", "");
-      rendition.themes.default({
-        p: { "text-align": "initial" },
-        body: { "text-align": "initial" },
-      });
-    } else {
-      if (alignment == "right") {
-        rendition.themes.registerUrl("right", "right.css");
-      } else if (alignment == "left") {
-        rendition.themes.registerUrl("left", "left.css");
-      } else if (alignment == "center") {
-        rendition.themes.registerUrl("center", "center.css");
-      } else if (alignment == "justify") {
-        rendition.themes.registerUrl("justify", "justify.css");
-      }
-      rendition.themes.select(alignment);
-      rendition.themes.default(alignment);
-    }
-  }
-
-  function setSnap(enable) {
-    rendition.flow("paginated");
-    rendition.settings.snap = enable;
-  }
-
-  //get current page text
-  function getCurrentPageText() {
-    var startCfi = rendition.location.start.cfi;
-    var endCfi = rendition.location.end.cfi;
-    var cfiRange = makeRangeCfi(startCfi, endCfi);
-    book.getRange(cfiRange).then(function (range) {
-      var text = range.toString();
-      var args = [text, cfiRange];
-      window.flutter_inappwebview.callHandler("epubText", ...args);
-    });
-  }
-
-  //get text from a range
-  function getTextFromCfi(startCfi, endCfi) {
-    var cfiRange = makeRangeCfi(startCfi, endCfi);
-    book.getRange(cfiRange).then(function (range) {
-      var text = range.toString();
-      var args = [text, cfiRange];
-      window.flutter_inappwebview.callHandler("epubText", ...args);
-    });
-  }
-
-  ///update theme
-  function updateTheme(backgroundColor, foregroundColor) {
-    if (backgroundColor && foregroundColor) {
-      rendition.themes.register("dark", {
-        body: {
-          background: backgroundColor,
-          color: `${foregroundColor} !important`,
-        },
-        p: { color: `${foregroundColor} !important` },
-        div: { color: `${foregroundColor} !important` },
-        span: { color: `${foregroundColor} !important` },
-        color: `${foregroundColor} !important`,
-      });
-      rendition.themes.select("dark");
-    }
-  }
-
-  const makeRangeCfi = (a, b) => {
-    const CFI = new ePub.CFI();
-    const start = CFI.parse(a),
-      end = CFI.parse(b);
-    const cfi = {
-      range: true,
-      base: start.base,
-      path: {
-        steps: [],
-        terminal: null,
-      },
-      start: start.path,
-      end: end.path,
-    };
-    const len = cfi.start.steps.length;
-    for (let i = 0; i < len; i++) {
-      if (CFI.equalStep(cfi.start.steps[i], cfi.end.steps[i])) {
-        if (i == len - 1) {
-          // Last step is equal, check terminals
-          if (cfi.start.terminal === cfi.end.terminal) {
-            // CFI's are equal
-            cfi.path.steps.push(cfi.start.steps[i]);
-            // Not a range
-            cfi.range = false;
+        if (alignment == "") {
+          console.log("clear theme");
+          rendition.themes.select(); // Deselects any theme
+          rendition.themes.override("text-align", "");
+          rendition.themes.default({
+            p: { "text-align": "initial" },
+            body: { "text-align": "initial" },
+          });
+        } else {
+          if (alignment == "right") {
+            rendition.themes.registerUrl("right", "right.css");
+          } else if (alignment == "left") {
+            rendition.themes.registerUrl("left", "left.css");
+          } else if (alignment == "center") {
+            rendition.themes.registerUrl("center", "center.css");
+          } else if (alignment == "justify") {
+            rendition.themes.registerUrl("justify", "justify.css");
           }
-        } else cfi.path.steps.push(cfi.start.steps[i]);
-      } else break;
-    }
-    cfi.start.steps = cfi.start.steps.slice(cfi.path.steps.length);
-    cfi.end.steps = cfi.end.steps.slice(cfi.path.steps.length);
-
-    return (
-      "epubcfi(" +
-      CFI.segmentString(cfi.base) +
-      "!" +
-      CFI.segmentString(cfi.path) +
-      "," +
-      CFI.segmentString(cfi.start) +
-      "," +
-      CFI.segmentString(cfi.end) +
-      ")"
-    );
-  };
-
-  function detectSwipe(el, func) {
-    swipe_det = new Object();
-    swipe_det.sX = 0;
-    swipe_det.sY = 0;
-    swipe_det.eX = 0;
-    swipe_det.eY = 0;
-    var min_x = 50; //min x swipe for horizontal swipe
-    var max_x = 40; //max x difference for vertical swipe
-    var min_y = 40; //min y swipe for vertical swipe
-    var max_y = 50; //max y difference for horizontal swipe
-    var direc = "";
-    ele = el;
-    console.log(el);
-    ele.addEventListener(
-      "touchstart",
-      function (e) {
-        var t = e.touches[0];
-        swipe_det.sX = t.screenX;
-        swipe_det.sY = t.screenY;
-      },
-      false
-    );
-    ele.addEventListener(
-      "touchmove",
-      function (e) {
-        e.preventDefault();
-        var t = e.touches[0];
-        swipe_det.eX = t.screenX;
-        swipe_det.eY = t.screenY;
-      },
-      false
-    );
-    ele.addEventListener(
-      "touchend",
-      function (e) {
-        //horizontal detection
-        if (
-          (swipe_det.eX - min_x > swipe_det.sX ||
-            swipe_det.eX + min_x < swipe_det.sX) &&
-          swipe_det.eY < swipe_det.sY + max_y &&
-          swipe_det.sY > swipe_det.eY - max_y
-        ) {
-          if (swipe_det.eX > swipe_det.sX) direc = "r";
-          else direc = "l";
+          rendition.themes.select(alignment);
+          rendition.themes.default(alignment);
         }
-        //vertical detection
-        if (
-          (swipe_det.eY - min_y > swipe_det.sY ||
-            swipe_det.eY + min_y < swipe_det.sY) &&
-          swipe_det.eX < swipe_det.sX + max_x &&
-          swipe_det.sX > swipe_det.eX - max_x
-        ) {
-          if (swipe_det.eY > swipe_det.sY) direc = "d";
-          else direc = "u";
-        }
+      }
 
-        if (direc != "") {
-          if (typeof func == "function") func(el, direc);
+      function setSnap(enable) {
+        rendition.flow("paginated");
+        rendition.settings.snap = enable;
+      }
+
+      //get current page text
+      function getCurrentPageText() {
+        var startCfi = rendition.location.start.cfi;
+        var endCfi = rendition.location.end.cfi;
+        var cfiRange = makeRangeCfi(startCfi, endCfi);
+        book.getRange(cfiRange).then(function (range) {
+          var text = range.toString();
+          var args = [text, cfiRange];
+          window.flutter_inappwebview.callHandler("epubText", ...args);
+        });
+      }
+
+      //get text from a range
+      function getTextFromCfi(startCfi, endCfi) {
+        var cfiRange = makeRangeCfi(startCfi, endCfi);
+        book.getRange(cfiRange).then(function (range) {
+          var text = range.toString();
+          var args = [text, cfiRange];
+          window.flutter_inappwebview.callHandler("epubText", ...args);
+        });
+      }
+
+      ///update theme
+      function updateTheme(backgroundColor, foregroundColor) {
+        if (backgroundColor && foregroundColor) {
+          rendition.themes.register("dark", {
+            body: {
+              background: backgroundColor,
+              color: `${foregroundColor} !important`,
+            },
+            p: { color: `${foregroundColor} !important` },
+            div: { color: `${foregroundColor} !important` },
+            span: { color: `${foregroundColor} !important` },
+            color: `${foregroundColor} !important`,
+          });
+          rendition.themes.select("dark");
         }
-        direc = "";
-      },
-      false
-    );
-  }
-</script>
-</body>
+      }
+
+      const makeRangeCfi = (a, b) => {
+        const CFI = new ePub.CFI();
+        const start = CFI.parse(a),
+          end = CFI.parse(b);
+        const cfi = {
+          range: true,
+          base: start.base,
+          path: {
+            steps: [],
+            terminal: null,
+          },
+          start: start.path,
+          end: end.path,
+        };
+        const len = cfi.start.steps.length;
+        for (let i = 0; i < len; i++) {
+          if (CFI.equalStep(cfi.start.steps[i], cfi.end.steps[i])) {
+            if (i == len - 1) {
+              // Last step is equal, check terminals
+              if (cfi.start.terminal === cfi.end.terminal) {
+                // CFI's are equal
+                cfi.path.steps.push(cfi.start.steps[i]);
+                // Not a range
+                cfi.range = false;
+              }
+            } else cfi.path.steps.push(cfi.start.steps[i]);
+          } else break;
+        }
+        cfi.start.steps = cfi.start.steps.slice(cfi.path.steps.length);
+        cfi.end.steps = cfi.end.steps.slice(cfi.path.steps.length);
+
+        return (
+          "epubcfi(" +
+          CFI.segmentString(cfi.base) +
+          "!" +
+          CFI.segmentString(cfi.path) +
+          "," +
+          CFI.segmentString(cfi.start) +
+          "," +
+          CFI.segmentString(cfi.end) +
+          ")"
+        );
+      };
+
+      function detectSwipe(el, func) {
+        swipe_det = new Object();
+        swipe_det.sX = 0;
+        swipe_det.sY = 0;
+        swipe_det.eX = 0;
+        swipe_det.eY = 0;
+        var min_x = 50; //min x swipe for horizontal swipe
+        var max_x = 40; //max x difference for vertical swipe
+        var min_y = 40; //min y swipe for vertical swipe
+        var max_y = 50; //max y difference for horizontal swipe
+        var direc = "";
+        ele = el;
+        console.log(el);
+        ele.addEventListener(
+          "touchstart",
+          function (e) {
+            var t = e.touches[0];
+            swipe_det.sX = t.screenX;
+            swipe_det.sY = t.screenY;
+          },
+          false
+        );
+        ele.addEventListener(
+          "touchmove",
+          function (e) {
+            e.preventDefault();
+            var t = e.touches[0];
+            swipe_det.eX = t.screenX;
+            swipe_det.eY = t.screenY;
+          },
+          false
+        );
+        ele.addEventListener(
+          "touchend",
+          function (e) {
+            //horizontal detection
+            if (
+              (swipe_det.eX - min_x > swipe_det.sX ||
+                swipe_det.eX + min_x < swipe_det.sX) &&
+              swipe_det.eY < swipe_det.sY + max_y &&
+              swipe_det.sY > swipe_det.eY - max_y
+            ) {
+              if (swipe_det.eX > swipe_det.sX) direc = "r";
+              else direc = "l";
+            }
+            //vertical detection
+            if (
+              (swipe_det.eY - min_y > swipe_det.sY ||
+                swipe_det.eY + min_y < swipe_det.sY) &&
+              swipe_det.eX < swipe_det.sX + max_x &&
+              swipe_det.sX > swipe_det.eX - max_x
+            ) {
+              if (swipe_det.eY > swipe_det.sY) direc = "d";
+              else direc = "u";
+            }
+
+            if (direc != "") {
+              if (typeof func == "function") func(el, direc);
+            }
+            direc = "";
+          },
+          false
+        );
+      }
+    </script>
+  </body>
 </html>
