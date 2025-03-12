@@ -82,8 +82,6 @@
       ) {
         var viewportHeight = window.innerHeight;
         document.getElementById("viewer").style.height = viewportHeight;
-        document.body.style.background = backgroundColor;
-        document.getElementById("viewer").style.background = backgroundColor;
         var uint8Array = new Uint8Array(data);
         book.open(uint8Array);
         rendition = book.renderTo("viewer", {
@@ -540,27 +538,47 @@
         ele.addEventListener(
           "touchend",
           function (e) {
-            //horizontal detection
-            if (
-              (swipe_det.eX - min_x > swipe_det.sX ||
-                swipe_det.eX + min_x < swipe_det.sX) &&
-              swipe_det.eY < swipe_det.sY + max_y &&
-              swipe_det.sY > swipe_det.eY - max_y
-            ) {
-              if (swipe_det.eX > swipe_det.sX) direc = "r";
-              else direc = "l";
-            }
-            //vertical detection
-            if (
-              (swipe_det.eY - min_y > swipe_det.sY ||
-                swipe_det.eY + min_y < swipe_det.sY) &&
-              swipe_det.eX < swipe_det.sX + max_x &&
-              swipe_det.sX > swipe_det.eX - max_x
-            ) {
-              if (swipe_det.eY > swipe_det.sY) direc = "d";
-              else direc = "u";
-            }
+            // //horizontal detection
+            // if (
+            //   (swipe_det.eX - min_x > swipe_det.sX ||
+            //     swipe_det.eX + min_x < swipe_det.sX) &&
+            //   swipe_det.eY < swipe_det.sY + max_y &&
+            //   swipe_det.sY > swipe_det.eY - max_y
+            // ) {
+            //   if (swipe_det.eX > swipe_det.sX) direc = "r";
+            //   else direc = "l";
+            // }
+            // //vertical detection
+            // if (
+            //   (swipe_det.eY - min_y > swipe_det.sY ||
+            //     swipe_det.eY + min_y < swipe_det.sY) &&
+            //   swipe_det.eX < swipe_det.sX + max_x &&
+            //   swipe_det.sX > swipe_det.eX - max_x
+            // ) {
+            //   if (swipe_det.eY > swipe_det.sY) direc = "d";
+            //   else direc = "u";
+            // }
 
+            // if (direc != "") {
+            //   if (typeof func == "function") func(el, direc);
+            // }
+            // direc = "";
+
+            var dx = swipe_det.eX - swipe_det.sX;
+            var dy = swipe_det.eY - swipe_det.sY;
+            if (
+              Math.abs(dx) > min_x &&
+              Math.abs(dy) < Math.abs(dx) * Math.tan((30 * Math.PI) / 180)
+            ) {
+              // horizontal swipe
+              direc = dx > 0 ? "r" : "l";
+            } else if (
+              Math.abs(dy) > min_y &&
+              Math.abs(dx) < Math.abs(dy) * Math.tan((30 * Math.PI) / 180)
+            ) {
+              // vertical swipe
+              direc = dy > 0 ? "d" : "u";
+            }
             if (direc != "") {
               if (typeof func == "function") func(el, direc);
             }
