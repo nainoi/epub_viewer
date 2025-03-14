@@ -1,10 +1,10 @@
 @font-face {
-    font-family: "Jindara";
+    font-family: "JSJindara";
     src: url("JSJindara.ttf") format("truetype");
 }
 
 body {
-    font-family: "Jindara", sans-serif !important;
+    font-family: "JSJindara", sans-serif !important;
 }
 
 .tan {
