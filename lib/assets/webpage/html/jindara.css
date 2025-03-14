@@ -1,0 +1,13 @@
+@font-face {
+    font-family: "Jindara";
+    src: url("JSJindara.ttf") format("truetype");
+}
+
+body {
+    font-family: "Jindara", sans-serif !important;
+}
+
+.tan {
+	background: tan;
+	color: #ccc;
+}

@@ -82,6 +82,8 @@
       ) {
         var viewportHeight = window.innerHeight;
         document.getElementById("viewer").style.height = viewportHeight;
+        document.body.style.background = backgroundColor;
+        document.getElementById("viewer").style.background = backgroundColor;
         var uint8Array = new Uint8Array(data);
         book.open(uint8Array);
         rendition = book.renderTo("viewer", {
@@ -127,8 +129,8 @@
         //book location changes callback
         rendition.on("relocated", function (location) {
           var percent = location.start.percentage;
-          // var percentage = Math.floor(percent * 100);
-          // console.log(location);
+          var percentage = Math.floor(percent * 100);
+          console.log(location);
           var location = {
             startCfi: location.start.cfi,
             endCfi: location.end.cfi,
@@ -162,7 +164,7 @@
         rendition.hooks.content.register((contents) => {
           if (useCustomSwipe) {
             const el = contents.document.documentElement;
-
+            console.log("useCustomSwipe");
             if (el) {
               console.log("EPUB_TEST_HOOK_IF");
               detectSwipe(el, function (el, direction) {
@@ -181,11 +183,12 @@
 
         //set background and foreground color
         updateTheme(backgroundColor, foregroundColor);
-        rendition.themes.registerUrl("khand", "khand.css");
+        rendition.themes.registerUrl("Khand", "khand.css");
         rendition.themes.registerUrl("Garuda", "garuda.css");
         rendition.themes.registerUrl("CordiaUPC", "cordiaupc.css");
         rendition.themes.registerUrl("BrowalliaUPC", "browallia.css");
         rendition.themes.registerUrl("FreesiaUPC", "freesia.css");
+        rendition.themes.registerUrl("JSJindara", "jindara.css");
         rendition.themes.registerUrl("right", "right.css");
         rendition.themes.registerUrl("left", "left.css");
         rendition.themes.registerUrl("center", "center.css");
@@ -515,7 +518,6 @@
         var max_y = 50; //max y difference for horizontal swipe
         var direc = "";
         ele = el;
-        console.log(el);
         ele.addEventListener(
           "touchstart",
           function (e) {
@@ -538,47 +540,27 @@
         ele.addEventListener(
           "touchend",
           function (e) {
-            // //horizontal detection
-            // if (
-            //   (swipe_det.eX - min_x > swipe_det.sX ||
-            //     swipe_det.eX + min_x < swipe_det.sX) &&
-            //   swipe_det.eY < swipe_det.sY + max_y &&
-            //   swipe_det.sY > swipe_det.eY - max_y
-            // ) {
-            //   if (swipe_det.eX > swipe_det.sX) direc = "r";
-            //   else direc = "l";
-            // }
-            // //vertical detection
-            // if (
-            //   (swipe_det.eY - min_y > swipe_det.sY ||
-            //     swipe_det.eY + min_y < swipe_det.sY) &&
-            //   swipe_det.eX < swipe_det.sX + max_x &&
-            //   swipe_det.sX > swipe_det.eX - max_x
-            // ) {
-            //   if (swipe_det.eY > swipe_det.sY) direc = "d";
-            //   else direc = "u";
-            // }
-
-            // if (direc != "") {
-            //   if (typeof func == "function") func(el, direc);
-            // }
-            // direc = "";
-
-            var dx = swipe_det.eX - swipe_det.sX;
-            var dy = swipe_det.eY - swipe_det.sY;
+            //horizontal detection
             if (
-              Math.abs(dx) > min_x &&
-              Math.abs(dy) < Math.abs(dx) * Math.tan((30 * Math.PI) / 180)
+              (swipe_det.eX - min_x > swipe_det.sX ||
+                swipe_det.eX + min_x < swipe_det.sX) &&
+              swipe_det.eY < swipe_det.sY + max_y &&
+              swipe_det.sY > swipe_det.eY - max_y
             ) {
-              // horizontal swipe
-              direc = dx > 0 ? "r" : "l";
-            } else if (
-              Math.abs(dy) > min_y &&
-              Math.abs(dx) < Math.abs(dy) * Math.tan((30 * Math.PI) / 180)
-            ) {
-              // vertical swipe
-              direc = dy > 0 ? "d" : "u";
+              if (swipe_det.eX > swipe_det.sX) direc = "r";
+              else direc = "l";
             }
+            //vertical detection
+            if (
+              (swipe_det.eY - min_y > swipe_det.sY ||
+                swipe_det.eY + min_y < swipe_det.sY) &&
+              swipe_det.eX < swipe_det.sX + max_x &&
+              swipe_det.sX > swipe_det.eX - max_x
+            ) {
+              if (swipe_det.eY > swipe_det.sY) direc = "d";
+              else direc = "u";
+            }
+
             if (direc != "") {
               if (typeof func == "function") func(el, direc);
             }
